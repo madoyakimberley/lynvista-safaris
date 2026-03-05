@@ -23,7 +23,7 @@ export default function useBook() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.message || "Booking failed");
 
       setSuccess(true);
       return data;
@@ -34,10 +34,5 @@ export default function useBook() {
     }
   };
 
-  return {
-    createBooking,
-    loading,
-    error,
-    success,
-  };
+  return { createBooking, loading, error, success };
 }
