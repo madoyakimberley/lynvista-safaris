@@ -5,15 +5,26 @@ import { Menu, X } from "lucide-react";
 
 function MainNav() {
   const [open, setOpen] = useState(false);
+  const [showHeader, setShowHeader] = useState(true);
+  const [lastScroll, setLastScroll] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      setOpen(false);
+      const currentScroll = window.scrollY;
+
+      // Show header if scrolling up, hide if scrolling down (past 80px)
+      if (currentScroll > lastScroll && currentScroll > 80) {
+        setShowHeader(false);
+        setOpen(false); // Close menu if open while hiding
+      } else {
+        setShowHeader(true);
+      }
+      setLastScroll(currentScroll);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScroll]);
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -23,7 +34,13 @@ function MainNav() {
   ];
 
   return (
-    <header className="bg-[#2d1b0b] text-[#faf8f3] px-4 md:px-12 py-3 shadow-lg sticky top-0 z-50">
+    <header
+      className={`
+        bg-[#2d1b0b] text-[#faf8f3] px-4 md:px-12 py-3 shadow-lg 
+        sticky top-0 z-50 transition-transform duration-300
+        ${showHeader ? "translate-y-0" : "-translate-y-full"}
+      `}
+    >
       <div className="container mx-auto flex justify-between items-center relative">
         {/* LEFT */}
         <div className="flex items-center z-10">
@@ -40,25 +57,10 @@ function MainNav() {
               <div key={link.href} className="flex items-center gap-6">
                 <a
                   href={link.href}
-                  className="
-                    uppercase
-                    relative
-                    hover:text-[#fbbf24]
-                    transition-colors
-                    after:content-['']
-                    after:absolute
-                    after:left-0
-                    after:-bottom-1
-                    after:h-0.5
-                    after:w-0
-                    after:bg-[#fbbf24]
-                    after:transition-all
-                    hover:after:w-full
-                  "
+                  className="uppercase relative hover:text-[#fbbf24] transition-colors after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-[#fbbf24] after:transition-all hover:after:w-full"
                 >
                   {link.label}
                 </a>
-
                 {index !== navLinks.length - 1 && (
                   <span className="w-px h-5 bg-white/20" />
                 )}
@@ -70,26 +72,21 @@ function MainNav() {
         {/* CENTER */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <div className="pointer-events-auto flex flex-col items-center">
-            <h1
-              className="text-2xl md:text-4xl tracking-tight leading-none whitespace-nowrap"
-              style={{ fontFamily: "var(--font-heading)", fontWeight: 700 }}
-            >
+            <h1 className="text-xl sm:text-2xl md:text-4xl tracking-tight leading-none whitespace-nowrap font-heading font-bold">
               <span className="text-white">LYNVISTA</span>{" "}
               <span className="text-[#fbbf24]">SAFARIS</span>
             </h1>
-
-            <span className="text-[10px] md:text-xs tracking-[0.4em] uppercase text-white font-semibold mt-1">
+            <span className="text-[8px] md:text-[10px] tracking-[0.4em] uppercase text-white font-semibold mt-1">
               LIMITED
             </span>
           </div>
         </div>
 
-        {/* RIGHT - Logo */}
+        {/* RIGHT */}
         <div className="flex items-center gap-4 z-10">
           <a
             href="/"
-            className="h-16 w-16 md:h-20 md:w-20 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"
-            aria-label="Go to homepage"
+            className="h-12 w-12 md:h-20 md:w-20 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"
           >
             <img
               src="/images/logo.png"
@@ -100,41 +97,22 @@ function MainNav() {
         </div>
       </div>
 
-      {/* ================= MOBILE MENU ================= */}
+      {/* MOBILE MENU */}
       <div
-        className={`
-          lg:hidden
-          absolute left-0 right-0 top-full
-          bg-[#2d1b0b]
-          transition-all duration-500 ease-in-out
-          rounded-b-3xl
-          shadow-2xl
-          border-t border-white/5
-          ${open ? "max-h-96 opacity-100 py-4 px-6" : "max-h-0 opacity-0 pointer-events-none"}
-        `}
+        className={`lg:hidden absolute left-0 right-0 top-full bg-[#2d1b0b] transition-all duration-500 ease-in-out rounded-b-3xl shadow-2xl border-t border-white/5 ${open ? "max-h-96 opacity-100 py-4 px-6" : "max-h-0 opacity-0 pointer-events-none"}`}
       >
         <div className="flex flex-col">
           {navLinks.map((link, index) => (
             <div key={link.label} className="w-full">
               <a
                 href={link.href}
-                className="
-                  text-lg 
-                  font-medium 
-                  py-5 
-                  text-gray-200
-                  hover:text-[#fbbf24] 
-                  transition-all
-                  flex 
-                  items-center
-                "
+                className="text-lg font-medium py-5 text-gray-200 hover:text-[#fbbf24] transition-all flex items-center"
                 onClick={() => setOpen(false)}
               >
                 {link.label}
               </a>
-
               {index !== navLinks.length - 1 && (
-                <div className="h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent" />
+                <div className="h-px w-full bg-white/10" />
               )}
             </div>
           ))}
