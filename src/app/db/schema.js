@@ -17,9 +17,13 @@ import {
 ======================= */
 export const admins = mysqlTable("admins", {
   id: serial("id").primaryKey(),
+
   email: varchar("email", { length: 150 }).notNull().unique(),
+
   password_hash: varchar("password_hash", { length: 255 }).notNull(),
-  last_login: datetime("last_login"),
+
+  role: mysqlEnum("role", ["super_admin", "admin"]).notNull().default("admin"),
+
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -120,4 +124,17 @@ export const bookingServices = mysqlTable("booking_services", {
   id: serial("id").primaryKey(),
   booking_id: int("booking_id").notNull(),
   service_id: int("service_id").notNull(),
+});
+/* =======================
+   AUDIT LOGS
+======================= */
+
+export const auditLogs = mysqlTable("audit_logs", {
+  id: serial("id").primaryKey(),
+
+  admin_id: int("admin_id").notNull(),
+
+  action: varchar("action", { length: 255 }).notNull(),
+
+  created_at: timestamp("created_at").defaultNow(),
 });
