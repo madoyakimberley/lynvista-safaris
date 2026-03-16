@@ -1,29 +1,23 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 
 export default function CalendarPicker({ startDate, endDate, onChange }) {
+  // Normalize today's date for comparison
   const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today);
+  today.setHours(0, 0, 0, 0);
 
-  /* ===================================================== */
-  /* FORMAT DATE */
-  /* ===================================================== */
+  const [currentMonth, setCurrentMonth] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1),
+  );
 
-  const formatDate = (date) => {
-    return date.toISOString().split("T")[0];
-  };
-
-  /* ===================================================== */
-  /* CALENDAR LOGIC */
-  /* ===================================================== */
+  const formatDate = (date) => date.toISOString().split("T")[0];
 
   const daysInMonth = new Date(
     currentMonth.getFullYear(),
     currentMonth.getMonth() + 1,
     0,
   ).getDate();
-
   const firstDay = new Date(
     currentMonth.getFullYear(),
     currentMonth.getMonth(),
@@ -39,40 +33,25 @@ export default function CalendarPicker({ startDate, endDate, onChange }) {
     ),
   ];
 
-  /* ===================================================== */
-  /* RANGE CHECK */
-  /* ===================================================== */
-
   const isInRange = (date) => {
     if (!startDate || !endDate) return false;
-
     const formatted = formatDate(date);
-
     return formatted > startDate && formatted < endDate;
   };
 
-  /* ===================================================== */
-  /* SELECTION HANDLER */
-  /* ===================================================== */
-
   const handleSelect = (date) => {
+    if (date < today) return; // Prevent selection of past dates
     const formatted = formatDate(date);
-
     if (!startDate || (startDate && endDate)) {
-      onChange(formatted, null); // start new selection
+      onChange(formatted, null);
     } else {
-      onChange(startDate, formatted); // set end
+      onChange(startDate, formatted);
     }
   };
 
-  /* ===================================================== */
-  /* UI */
-  /* ===================================================== */
-
   return (
-    <div className="bg-(--color-light) border border-(--color-dark-muted) rounded-xl p-6 mt-3 text-(--color-dark)">
-      {/* ================= HEADER ================= */}
-
+    <div className="bg-[#fdfcf9] border border-[#e7e3da] rounded-xl p-6 mt-3 text-[#442c23]">
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-4">
         <button
           type="button"
@@ -85,18 +64,14 @@ export default function CalendarPicker({ startDate, endDate, onChange }) {
               ),
             )
           }
-          className="font-bold hover:text-(--color-primary)"
+          className="font-bold hover:text-[#8b5e3c]"
         >
           ←
         </button>
-
-        <h3 className="font-heading text-lg">
-          {currentMonth.toLocaleString("default", {
-            month: "long",
-          })}{" "}
+        <h3 className="font-heading text-lg font-bold">
+          {currentMonth.toLocaleString("default", { month: "long" })}{" "}
           {currentMonth.getFullYear()}
         </h3>
-
         <button
           type="button"
           onClick={() =>
@@ -108,55 +83,51 @@ export default function CalendarPicker({ startDate, endDate, onChange }) {
               ),
             )
           }
-          className="font-bold hover:text-(--color-primary)"
+          className="font-bold hover:text-[#8b5e3c]"
         >
           →
         </button>
       </div>
 
-      {/* ================= DAY LABELS ================= */}
-
-      <div className="grid grid-cols-7 text-center text-sm mb-2 text-(--color-dark-muted)">
+      {/* DAY LABELS */}
+      <div className="grid grid-cols-7 text-center text-sm mb-2 text-[#8b5e3c]">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div key={day}>{day}</div>
         ))}
       </div>
 
-      {/* ================= DATE GRID ================= */}
+      {/* DATE GRID */}
+      <div className="grid grid-cols-7 gap-1">
+        {dates.map((date, index) => {
+          const isPast = date && date < today;
+          const isToday = date && formatDate(date) === formatDate(today);
+          const isSelected =
+            date &&
+            (formatDate(date) === startDate || formatDate(date) === endDate);
 
-      <div className="grid grid-cols-7 gap-2">
-        {dates.map((date, index) =>
-          date ? (
+          return date ? (
             <button
               key={index}
               type="button"
+              disabled={isPast}
               onClick={() => handleSelect(date)}
-              className={`relative p-2 rounded-md transition text-(--color-dark)
-
-                ${
-                  startDate && formatDate(date) === startDate
-                    ? "bg-(--color-primary) text-white z-10"
-                    : ""
-                }
-
-                ${
-                  endDate && formatDate(date) === endDate
-                    ? "bg-(--color-secondary) text-white z-10"
-                    : ""
-                }
-
-                ${isInRange(date) ? "bg-(--color-primary)/20" : ""}
-
-                hover:bg-(--color-secondary) hover:text-white
+              className={`relative p-2 rounded-md transition text-sm
+                ${isPast ? "text-gray-300 cursor-not-allowed" : "text-[#442c23] hover:bg-[#442c23] hover:text-white"}
+                ${isSelected ? "bg-[#442c23] text-white font-bold" : ""}
+                ${isInRange(date) ? "bg-[#442c23]/20" : ""}
+                ${isToday && !isSelected ? "border border-[#442c23] font-bold" : ""}
               `}
             >
               {date.getDate()}
             </button>
           ) : (
             <div key={index} />
-          ),
-        )}
+          );
+        })}
       </div>
+      <p className="text-[10px] text-center mt-4 text-[#8b5e3c] italic">
+        Select start and end dates for your safari
+      </p>
     </div>
   );
 }

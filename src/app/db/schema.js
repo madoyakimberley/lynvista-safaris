@@ -6,10 +6,9 @@ import {
   text,
   decimal,
   timestamp,
-  datetime,
-  date,
   mysqlEnum,
   primaryKey,
+  date,
 } from "drizzle-orm/mysql-core";
 
 /* =======================
@@ -17,13 +16,9 @@ import {
 ======================= */
 export const admins = mysqlTable("admins", {
   id: serial("id").primaryKey(),
-
   email: varchar("email", { length: 150 }).notNull().unique(),
-
   password_hash: varchar("password_hash", { length: 255 }).notNull(),
-
   role: mysqlEnum("role", ["super_admin", "admin"]).notNull().default("admin"),
-
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -50,7 +45,7 @@ export const services = mysqlTable("services", {
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
   icon_name: varchar("icon_name", { length: 50 }).notNull(),
-  is_active: int("is_active").default(1), // tinyint(1)
+  is_active: int("is_active").default(1),
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -76,13 +71,13 @@ export const bookings = mysqlTable("bookings", {
   full_name: varchar("full_name", { length: 100 }).notNull(),
   email: varchar("email", { length: 100 }).notNull(),
   phone: varchar("phone", { length: 30 }).notNull(),
-
   tour_package: varchar("tour_package", { length: 255 }),
 
   flight_type: mysqlEnum("flight_type", [
     "Domestic Flight",
     "International Flight",
-  ]),
+    "None",
+  ]).default("None"),
 
   departure_city: varchar("departure_city", { length: 100 }),
   arrival_city: varchar("arrival_city", { length: 100 }),
@@ -93,48 +88,79 @@ export const bookings = mysqlTable("bookings", {
     "Lodge",
     "Camp",
     "Apartment",
-  ]),
+    "None",
+  ]).default("None"),
 
   checkin_date: date("checkin_date"),
   checkout_date: date("checkout_date"),
   travel_start_date: date("travel_start_date"),
   travel_end_date: date("travel_end_date"),
 
-  travelers: int("travelers").default(1),
+  adults: int("adults").default(1),
+  children: int("children").default(0),
 
-  currency: mysqlEnum("currency", ["EUR", "USD", "KES"]).notNull(),
-
+  currency: mysqlEnum("currency", ["EUR", "USD", "KES"])
+    .notNull()
+    .default("USD"),
   notes: text("notes"),
 
-  created_at: timestamp("created_at").defaultNow(),
+  quoted_price: decimal("quoted_price", { precision: 10, scale: 2 }),
+  payment_method: mysqlEnum("payment_method", ["Stripe", "M-Pesa"]),
+  payment_link_sent: mysqlEnum("payment_link_sent", ["Yes", "No"]).default(
+    "No",
+  ),
 
-  user_id: int("user_id"),
-
+  managed_status: mysqlEnum("managed_status", ["Pending", "Managed"]).default(
+    "Pending",
+  ),
   payment_status: mysqlEnum("payment_status", [
     "Pending",
+    "Quotation Sent",
     "Paid",
     "Cancelled",
   ]).default("Pending"),
+
+  created_at: timestamp("created_at").defaultNow(),
+  user_id: int("user_id"),
 });
 
 /* =======================
-   BOOKING SERVICES
+   QUOTES
+======================= */
+export const quotes = mysqlTable("quotes", {
+  id: serial("id").primaryKey(),
+  booking_id: int("booking_id").notNull(),
+  total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  payment_method: mysqlEnum("payment_method", ["Paystack", "M-Pesa"]).notNull(),
+  payment_link: text("payment_link"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+/* =======================
+   QUOTE ITEMS
+======================= */
+export const quoteItems = mysqlTable("quote_items", {
+  id: serial("id").primaryKey(),
+  quote_id: int("quote_id").notNull(),
+  item_name: varchar("item_name", { length: 150 }).notNull(),
+  item_price: decimal("item_price", { precision: 10, scale: 2 }).notNull(),
+});
+
+/* =======================
+   BOOKING SERVICES (M:N)
 ======================= */
 export const bookingServices = mysqlTable("booking_services", {
   id: serial("id").primaryKey(),
   booking_id: int("booking_id").notNull(),
   service_id: int("service_id").notNull(),
 });
+
 /* =======================
    AUDIT LOGS
 ======================= */
-
 export const auditLogs = mysqlTable("audit_logs", {
   id: serial("id").primaryKey(),
-
   admin_id: int("admin_id").notNull(),
-
   action: varchar("action", { length: 255 }).notNull(),
-
   created_at: timestamp("created_at").defaultNow(),
 });

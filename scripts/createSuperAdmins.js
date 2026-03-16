@@ -6,8 +6,8 @@ import { eq } from "drizzle-orm"; // <-- You were missing this import
 
 async function createSuperAdmin() {
   try {
-    const email = "dev@lynvista.com";
-    const password = "admin1234"; // Use this to log in!
+    const email = "developmentperiod_and_management@lynvista.com";
+    const password = "12345admin123452036"; // Use this to log in!
 
     console.log("Checking for existing admin...");
 

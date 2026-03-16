@@ -59,7 +59,7 @@ export default function AdminLogin() {
               <Mail className="ml-3 text-[#78350f]" size={20} />
               <input
                 type="email"
-                placeholder="dev@lynvista.com"
+                placeholder="youremail@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-4 bg-transparent outline-none text-[#2d1a12] font-semibold"

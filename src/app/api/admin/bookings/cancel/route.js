@@ -17,9 +17,7 @@ export async function POST(req) {
 
     await db
       .update(bookings)
-      .set({
-        payment_status: "Cancelled",
-      })
+      .set({ payment_status: "Cancelled" })
       .where(eq(bookings.id, Number(bookingId)));
 
     return NextResponse.json({
@@ -28,7 +26,6 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Cancel booking error:", error);
-
     return NextResponse.json(
       { error: "Failed to cancel booking" },
       { status: 500 },

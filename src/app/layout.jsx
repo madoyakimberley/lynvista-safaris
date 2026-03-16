@@ -16,22 +16,25 @@ export const metadata = {
 
 function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        <AOSWrapper>
-          <BodyWrapper>
-            <MainNav />
+    <>
+      {/* Added suppressHydrationWarning to ignore extension-injected attributes */}
+      <html lang="en" suppressHydrationWarning>
+        <body className="antialiased" suppressHydrationWarning>
+          <AOSWrapper>
+            <BodyWrapper>
+              <MainNav />
 
-            {children}
+              {children}
 
-            <MainFooter />
+              <MainFooter />
 
-            <ScrollButton />
-            <WhatsAppButton />
-          </BodyWrapper>
-        </AOSWrapper>
-      </body>
-    </html>
+              <ScrollButton />
+              <WhatsAppButton />
+            </BodyWrapper>
+          </AOSWrapper>
+        </body>
+      </html>
+    </>
   );
 }
 export default RootLayout;
