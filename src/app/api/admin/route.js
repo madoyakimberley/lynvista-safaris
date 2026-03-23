@@ -48,4 +48,4 @@ export async function POST(req) {
     .values({ admin_id: decoded.id, action: `Created admin ${email}` });
 
   return NextResponse.json({ success: true });
-} hold on to the code
+}
