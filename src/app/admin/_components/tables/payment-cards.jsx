@@ -39,6 +39,26 @@ export default function PaymentCards({ bookings }) {
     window.location.reload();
   };
 
+  // ===================== PAYSTACK PAYMENT (Admin) =====================
+  const triggerPaystack = async (id) => {
+    try {
+      const res = await fetch("/api/admin/bookings/paystack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: id }),
+      });
+      const data = await res.json();
+      if (data.payment_url) {
+        window.open(data.payment_url, "_blank");
+      } else {
+        alert("Paystack initialization failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error connecting to Paystack.");
+    }
+  };
+
   // ===================== STYLES =====================
   const cardStyle = "rounded-xl shadow p-6 space-y-3 border border-[#e7e3da]";
   const textDark = { color: "var(--color-dark)" };
@@ -82,12 +102,23 @@ export default function PaymentCards({ bookings }) {
                   <strong>Flight:</strong> {b.flight_type}
                 </p>
               </div>
-              <button
-                onClick={() => toggleStatus(b.id, "Managed")}
-                className="w-full mt-4 bg-green-700 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800 transition"
-              >
-                Mark as Managed
-              </button>
+
+              {/* ================= BUTTONS ================= */}
+              <div className="flex flex-col gap-2 mt-4">
+                <button
+                  onClick={() => toggleStatus(b.id, "Managed")}
+                  className="w-full bg-green-700 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800 transition"
+                >
+                  Mark as Managed
+                </button>
+
+                <button
+                  onClick={() => triggerPaystack(b.id)}
+                  className="w-full bg-yellow-500 text-black px-4 py-2 rounded text-sm font-semibold hover:bg-yellow-600 transition"
+                >
+                  Send Paystack Payment
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -111,8 +142,6 @@ export default function PaymentCards({ bookings }) {
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
           {managed.map((b) => (
             <div key={b.id} className={`${cardStyle} bg-[#f3f2e8]`}>
-              {" "}
-              {/* Lower contrast */}
               <h3 className="font-bold" style={textDark}>
                 {b.full_name}
               </h3>

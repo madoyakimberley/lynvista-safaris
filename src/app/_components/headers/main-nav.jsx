@@ -12,10 +12,9 @@ function MainNav() {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
 
-      // Show header if scrolling up, hide if scrolling down (past 80px)
       if (currentScroll > lastScroll && currentScroll > 80) {
         setShowHeader(false);
-        setOpen(false); // Close menu if open while hiding
+        setOpen(false);
       } else {
         setShowHeader(true);
       }
@@ -41,18 +40,18 @@ function MainNav() {
         ${showHeader ? "translate-y-0" : "-translate-y-full"}
       `}
     >
-      <div className="container mx-auto flex justify-between items-center relative">
+      <div className="container mx-auto flex justify-between items-center">
         {/* LEFT */}
-        <div className="flex items-center z-10">
+        <div className="flex items-center z-10 xl:w-1/3">
           <button
-            className="lg:hidden p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors"
+            className="xl:hidden p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors"
             onClick={() => setOpen(!open)}
             aria-label="Toggle Menu"
           >
             {open ? <X size={28} /> : <Menu size={28} />}
           </button>
 
-          <nav className="hidden lg:flex items-center gap-6 font-medium text-sm tracking-wide">
+          <nav className="hidden xl:flex items-center gap-6 font-medium text-sm tracking-wide">
             {navLinks.map((link, index) => (
               <div key={link.href} className="flex items-center gap-6">
                 <a
@@ -70,9 +69,9 @@ function MainNav() {
         </div>
 
         {/* CENTER */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <div className="pointer-events-auto flex flex-col items-center">
-            <h1 className="text-xl sm:text-2xl md:text-4xl tracking-tight leading-none whitespace-nowrap font-heading font-bold">
+        <div className="flex flex-col items-center justify-center xl:w-1/3">
+          <div className="flex flex-col items-center">
+            <h1 className="text-xl sm:text-2xl md:text-3xl xl:text-4xl tracking-tight leading-none whitespace-nowrap font-heading font-bold text-center">
               <span className="text-white">LYNVISTA</span>{" "}
               <span className="text-[#fbbf24]">SAFARIS</span>
             </h1>
@@ -83,10 +82,10 @@ function MainNav() {
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-4 z-10">
+        <div className="flex items-center justify-end z-10 xl:w-1/3">
           <a
             href="/"
-            className="h-12 w-12 md:h-20 md:w-20 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"
+            className="h-12 w-12 md:h-16 md:w-16 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"
           >
             <img
               src="/images/logo.png"
@@ -99,7 +98,7 @@ function MainNav() {
 
       {/* MOBILE MENU */}
       <div
-        className={`lg:hidden absolute left-0 right-0 top-full bg-[#2d1b0b] transition-all duration-500 ease-in-out rounded-b-3xl shadow-2xl border-t border-white/5 ${open ? "max-h-96 opacity-100 py-4 px-6" : "max-h-0 opacity-0 pointer-events-none"}`}
+        className={`xl:hidden absolute left-0 right-0 top-full bg-[#2d1b0b] transition-all duration-500 ease-in-out rounded-b-3xl shadow-2xl border-t border-white/5 ${open ? "max-h-96 opacity-100 py-4 px-6" : "max-h-0 opacity-0 pointer-events-none"}`}
       >
         <div className="flex flex-col">
           {navLinks.map((link, index) => (

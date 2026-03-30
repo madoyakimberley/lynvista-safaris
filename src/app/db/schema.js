@@ -105,7 +105,12 @@ export const bookings = mysqlTable("bookings", {
   notes: text("notes"),
 
   quoted_price: decimal("quoted_price", { precision: 10, scale: 2 }),
-  payment_method: mysqlEnum("payment_method", ["Stripe", "M-Pesa"]),
+  payment_method: mysqlEnum("payment_method", [
+    "Stripe",
+    "M-Pesa",
+    "Paystack",
+  ]).default(null),
+  payment_reference: varchar("payment_reference", { length: 255 }),
   payment_link_sent: mysqlEnum("payment_link_sent", ["Yes", "No"]).default(
     "No",
   ),
@@ -129,7 +134,7 @@ export const bookings = mysqlTable("bookings", {
 ======================= */
 export const quotes = mysqlTable("quotes", {
   id: serial("id").primaryKey(),
-  booking_id: int("booking_id").notNull(),
+  booking_id: int("booking_id").notNull(), // should exist in bookings
   total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   payment_method: mysqlEnum("payment_method", ["Paystack", "M-Pesa"]).notNull(),
   payment_link: text("payment_link"),
@@ -141,7 +146,7 @@ export const quotes = mysqlTable("quotes", {
 ======================= */
 export const quoteItems = mysqlTable("quote_items", {
   id: serial("id").primaryKey(),
-  quote_id: int("quote_id").notNull(),
+  quote_id: int("quote_id").notNull(), // FK to quotes.id
   item_name: varchar("item_name", { length: 150 }).notNull(),
   item_price: decimal("item_price", { precision: 10, scale: 2 }).notNull(),
 });

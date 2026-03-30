@@ -7,10 +7,53 @@ export async function POST(req) {
   try {
     const body = await req.json();
 
-    // ================= SAVE BOOKING TO DATABASE =================
-    const [newBooking] = await db.insert(bookings).values(body).execute();
+    if (!body.full_name || !body.email || !body.phone) {
+      return NextResponse.json(
+        { success: false, message: "Missing required fields" },
+        { status: 400 },
+      );
+    }
 
-    // ================= TRANSPORTER SETUP =================
+    const cleanedBody = {
+      full_name: body.full_name,
+      email: body.email,
+      phone: body.phone,
+      tour_package: body.tour_package || null,
+
+      flight_type:
+        body.flight_type === "None" ? null : body.flight_type || null,
+
+      departure_city: body.departure_city || null,
+      arrival_city: body.arrival_city || null,
+
+      accommodation_type:
+        body.accommodation_type === "None"
+          ? null
+          : body.accommodation_type || null,
+
+      checkin_date: body.checkin_date || null,
+      checkout_date: body.checkout_date || null,
+
+      travel_start_date: body.travel_start_date || null,
+      travel_end_date: body.travel_end_date || null,
+
+      adults: body.adults || 1,
+      children: body.children || 0,
+
+      currency: body.currency || "USD",
+      notes: body.notes || null,
+
+      quoted_price: body.quoted_price || null,
+      payment_method: body.payment_method || null,
+      payment_reference: body.payment_reference || null,
+    };
+
+    // ================= SAVE BOOKING =================
+    const [newBooking] = await db
+      .insert(bookings)
+      .values(cleanedBody)
+      .execute();
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -19,9 +62,12 @@ export async function POST(req) {
       },
     });
 
-    // ==========================================================
-    // ================= CLIENT EMAIL TEMPLATE ===================
-    // ==========================================================
+    const tour = body.tour_package || "Not specified";
+    const startDate = body.travel_start_date || "N/A";
+    const endDate = body.travel_end_date || "N/A";
+    const travelers = `${body.adults || 1} Adults, ${
+      body.children || 0
+    } Children`;
 
     const clientEmailTemplate = `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #e5e5e5; border-radius: 20px; overflow: hidden; background-color: #fdfdfd;">
@@ -45,17 +91,15 @@ export async function POST(req) {
           </p>
 
           <div style="background-color: #f4f1ed; padding: 20px; border-radius: 12px; margin: 25px 0;">
-            <p><strong>Tour:</strong> ${body.tour_package}</p>
-            <p><strong>Travel Dates:</strong> ${body.travel_start_date} → ${body.travel_end_date}</p>
-            <p><strong>Travelers:</strong> ${body.travelers}</p>
+            <p><strong>Tour:</strong> ${tour}</p>
+            <p><strong>Travel Dates:</strong> ${startDate} → ${endDate}</p>
+            <p><strong>Travelers:</strong> ${travelers}</p>
             <p><strong>Status:</strong>
               <span style="color: #d97706;">Pending</span>
             </p>
           </div>
 
-          <p>
-            We will contact you via email or phone shortly.
-          </p>
+          <p>We will contact you shortly.</p>
 
           <p>
             Warm regards,<br/>
@@ -70,10 +114,6 @@ export async function POST(req) {
       </div>
     `;
 
-    // ==========================================================
-    // ================= ADMIN EMAIL TEMPLATE ====================
-    // ==========================================================
-
     const adminEmailTemplate = `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #e5e5e5; border-radius: 20px; overflow: hidden; background-color: #fdfdfd;">
 
@@ -81,39 +121,24 @@ export async function POST(req) {
            <h1 style="color: #e5b078; margin: 0; font-family: serif;">
               NEW BOOKING ALERT
            </h1>
-           <p style="color: #ffffff; font-size: 14px; margin-top: 5px;">
-              Admin Notification
-           </p>
         </div>
 
         <div style="padding: 30px; color: #3d2b1f;">
-
           <h2>🚨 Booking From ${body.full_name}</h2>
-
-          <p>
-            A new booking has been submitted through the website.
-            Please review it in the admin dashboard.
-          </p>
 
           <div style="background-color: #f4f1ed; padding: 20px; border-radius: 12px; margin: 25px 0;">
             <p><strong>Name:</strong> ${body.full_name}</p>
             <p><strong>Email:</strong> ${body.email}</p>
             <p><strong>Phone:</strong> ${body.phone}</p>
-            <p><strong>Tour:</strong> ${body.tour_package}</p>
-            <p><strong>Travel Dates:</strong>
-              ${body.travel_start_date} → ${body.travel_end_date}
-            </p>
-            <p><strong>Travelers:</strong> ${body.travelers}</p>
-            <p>
-              <strong>Status:</strong>
+            <p><strong>Tour:</strong> ${tour}</p>
+            <p><strong>Travel Dates:</strong> ${startDate} → ${endDate}</p>
+            <p><strong>Travelers:</strong> ${travelers}</p>
+            <p><strong>Status:</strong>
               <span style="color: #d97706;">Pending</span>
             </p>
           </div>
 
-          <p>
-            Please log into the admin panel to confirm or update this booking.
-          </p>
-
+          <p>Check admin dashboard for details.</p>
         </div>
 
         <div style="background-color: #3d2b1f; padding: 15px; text-align: center; color: #e5b078; font-size: 12px;">
@@ -123,10 +148,6 @@ export async function POST(req) {
       </div>
     `;
 
-    // ==========================================================
-    // ================= SEND EMAIL TO CLIENT ====================
-    // ==========================================================
-
     await transporter.sendMail({
       from: `"Lynvista Safaris" <${process.env.EMAIL_USER}>`,
       to: body.email,
@@ -134,20 +155,12 @@ export async function POST(req) {
       html: clientEmailTemplate,
     });
 
-    // ==========================================================
-    // ================= SEND EMAIL TO ADMIN =====================
-    // ==========================================================
-
     await transporter.sendMail({
       from: `"Lynvista Safaris System" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL, // 👈 ADD THIS TO YOUR .env
+      to: process.env.ADMIN_EMAIL,
       subject: "🚨 New Booking Received",
       html: adminEmailTemplate,
     });
-
-    // ==========================================================
-    // ================= RESPONSE ================================
-    // ==========================================================
 
     return NextResponse.json({
       success: true,

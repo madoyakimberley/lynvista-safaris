@@ -6,26 +6,46 @@ import { NextResponse } from "next/server";
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const reference = searchParams.get("reference");
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(req.url).origin;
+
+  if (!reference)
+    return NextResponse.redirect(
+      `${baseUrl}/booking-error?message=no-reference`,
+    );
 
   try {
     const paystackRes = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
+      `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
       {
-        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`.trim(),
+        },
       },
     );
-    const data = await paystackRes.json();
 
+    const data = await paystackRes.json();
     if (data.status && data.data.status === "success") {
-      await db
-        .update(bookings)
-        .set({ payment_status: "Paid" })
-        .where(eq(bookings.id, data.data.metadata.bookingId));
-      return NextResponse.json({ success: true });
+      const bookingId = data.data.metadata?.bookingId;
+      if (bookingId) {
+        await db
+          .update(bookings)
+          .set({ payment_status: "Paid", payment_reference: reference })
+          .where(eq(bookings.id, bookingId));
+        return NextResponse.redirect(
+          `${baseUrl}/payment-success?id=${bookingId}`,
+        );
+      }
+      return NextResponse.redirect(
+        `${baseUrl}/booking-error?message=missing-metadata`,
+      );
     }
-    return NextResponse.json({ success: false }, { status: 400 });
+
+    return NextResponse.redirect(
+      `${baseUrl}/booking-error?message=payment-failed`,
+    );
   } catch (err) {
-    console.error("Verify Error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.redirect(
+      `${baseUrl}/booking-error?message=server-error`,
+    );
   }
 }

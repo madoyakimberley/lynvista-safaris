@@ -16,22 +16,62 @@ export default function ManageService({ services = [] }) {
 
     setLoading(true);
 
-    await fetch("/api/admin/services", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch("/api/admin/services", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // If you want to use cookie authentication, include this
+          // credentials: "include",
+        },
+        body: JSON.stringify(form),
+      });
 
-    setForm({
-      name: "",
-      description: "",
-      icon_name: "",
-    });
+      const data = await res.json();
 
-    setLoading(false);
-    window.location.reload();
+      if (!res.ok) {
+        alert(data.message || "Failed to save service");
+        setLoading(false);
+        return;
+      }
+
+      // Reset form
+      setForm({
+        name: "",
+        description: "",
+        icon_name: "",
+      });
+
+      // Reload services
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while saving the service");
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this service?")) return;
+
+    try {
+      const res = await fetch(`/api/admin/services?id=${id}`, {
+        method: "DELETE",
+        // credentials: "include", // if using cookie auth
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to delete service");
+        return;
+      }
+
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while deleting the service");
+    }
   };
 
   return (
@@ -85,12 +125,7 @@ export default function ManageService({ services = [] }) {
             </div>
 
             <button
-              onClick={async () => {
-                await fetch(`/api/admin/services/${service.id}`, {
-                  method: "DELETE",
-                });
-                window.location.reload();
-              }}
+              onClick={() => handleDelete(service.id)}
               className="text-red-500"
             >
               Delete

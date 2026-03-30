@@ -4,6 +4,7 @@ import { Check, X } from "lucide-react";
 
 export default function PaymentTable({ bookings, refresh }) {
   const updateStatus = async (id, status) => {
+    // Update status
     await fetch("/api/admin/bookings/update", {
       method: "PATCH",
       headers: {
@@ -11,6 +12,8 @@ export default function PaymentTable({ bookings, refresh }) {
       },
       body: JSON.stringify({ id, status }),
     });
+
+    // Optional: trigger receipt generation
     await fetch("/api/admin/bookings/receipt", {
       method: "POST",
       body: JSON.stringify({ bookingId: id }),
@@ -19,6 +22,8 @@ export default function PaymentTable({ bookings, refresh }) {
     // ✅ Safe reload
     window.location.reload();
   };
+
+  // ===================== STYLES =====================
   return (
     <div className="p-6 rounded-xl shadow" style={{ background: "white" }}>
       <h2
@@ -43,13 +48,9 @@ export default function PaymentTable({ bookings, refresh }) {
           {bookings.map((b) => (
             <tr key={b.id} className="border-b">
               <td>{b.full_name}</td>
-
               <td>{b.tour_package}</td>
-
               <td>{b.travelers}</td>
-
               <td>{b.payment_status}</td>
-
               <td className="flex gap-3 py-3">
                 <button
                   onClick={() => updateStatus(b.id, "Paid")}

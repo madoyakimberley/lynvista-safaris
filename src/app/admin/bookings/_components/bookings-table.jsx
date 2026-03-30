@@ -7,18 +7,13 @@ export default function BookingsTable({
   markPaid,
   deleteBooking,
   sendPaymentLink,
+  sentQuotations,
 }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [quoteItems, setQuoteItems] = useState([{ name: "", price: "" }]);
   const [currency, setCurrency] = useState("KES");
   const [paymentMethod, setPaymentMethod] = useState("Paystack");
-
-  // Translates database values to user-friendly labels
-  function formatPaymentMethod(method) {
-    if (method === "Paystack" || method === "Stripe") return "Card Payment";
-    return method || "N/A";
-  }
 
   function openQuoteModal(booking) {
     setSelectedBooking(booking);
@@ -47,14 +42,16 @@ export default function BookingsTable({
 
   async function handleSubmit() {
     if (!selectedBooking) return;
+
     await sendPaymentLink(
       selectedBooking.id,
       totalPrice,
-      paymentMethod,
       quoteItems,
       selectedBooking.email,
-      currency,
+      paymentMethod,
+      currency, // Passing currency state to parent function
     );
+
     setShowModal(false);
   }
 
@@ -64,59 +61,79 @@ export default function BookingsTable({
         <thead>
           <tr className="text-[13px] font-bold uppercase border-b-2 border-[#2d5016]/20">
             <th className="pb-4 pr-4">Client</th>
-            <th className="pb-4 px-4">Tour</th>
-            <th className="pb-4 px-4">Method</th>
+            <th className="pb-4 px-4">Tour / Service</th>
+            <th className="pb-4 px-4">Price</th>
+            <th className="pb-4 px-4 text-center">Method</th>
             <th className="pb-4 px-4 text-center">Status</th>
             <th className="pb-4 pl-4 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[#2d1b0b]/10">
-          {bookings.map((b) => (
-            <tr key={b.id} className="text-sm hover:bg-[#2d5016]/5">
-              <td className="py-5 pr-4 font-bold">{b.full_name}</td>
-              <td className="py-5 px-4">{b.tour_package}</td>
-              <td className="py-5 px-4">
-                {formatPaymentMethod(b.payment_method)}
-              </td>
-              <td className="py-5 px-4 text-center">
-                <span
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold ${b.payment_status === "Paid" ? "bg-[#2d5016] text-white" : "bg-[#fbbf24]"}`}
-                >
-                  {b.payment_status}
-                </span>
-              </td>
-              <td className="py-5 pl-4 text-right flex gap-2 justify-end">
-                {b.payment_status === "Pending" && (
+          {bookings.map((b) => {
+            const isSent =
+              sentQuotations[b.id] || b.payment_status === "Quotation Sent";
+
+            return (
+              <tr
+                key={b.id}
+                className="text-sm hover:bg-[#2d5016]/5 transition"
+              >
+                <td className="py-5 pr-4 font-bold">{b.full_name}</td>
+                <td className="py-5 px-4">
+                  {b.service_name || b.tour_package || "—"}
+                </td>
+                <td className="py-5 px-4">
+                  {b.total_price || 0} {b.currency || "KES"}
+                </td>
+                <td className="py-5 px-4 text-center text-xs">
+                  {b.payment_method === "Paystack"
+                    ? "Card Payment"
+                    : b.payment_method || "—"}
+                </td>
+                <td className="py-5 px-4 text-center">
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                      b.payment_status === "Paid"
+                        ? "bg-[#2d5016] text-white"
+                        : "bg-[#fbbf24] text-[#2d1b0b]"
+                    }`}
+                  >
+                    {b.payment_status}
+                  </span>
+                </td>
+                <td className="py-5 pl-4 text-right flex gap-2 flex-wrap justify-end">
                   <button
                     onClick={() => openQuoteModal(b)}
-                    className="bg-[#2d5016] text-white px-3 py-1 rounded text-[10px]"
+                    className={`px-4 py-1 rounded-full text-white transition ${
+                      isSent ? "bg-[#a16207]" : "bg-[#2d5016]"
+                    }`}
                   >
-                    QUOTE
+                    {isSent ? "RESEND QUOTE" : "SEND QUOTE"}
                   </button>
-                )}
-                <button
-                  onClick={() => markPaid(b.id)}
-                  className="bg-[#2d5016] text-white px-3 py-1 rounded text-[10px]"
-                >
-                  PAID
-                </button>
-                <button
-                  onClick={() => deleteBooking(b.id)}
-                  className="bg-red-700 text-white px-3 py-1 rounded text-[10px]"
-                >
-                  DELETE
-                </button>
-              </td>
-            </tr>
-          ))}
+                  <button
+                    onClick={() => markPaid(b.id)}
+                    className="bg-[#2d5016] text-white px-4 py-1 rounded-full hover:bg-[#3e2c1f] transition"
+                  >
+                    MARK PAID
+                  </button>
+                  <button
+                    onClick={() => deleteBooking(b.id)}
+                    className="bg-red-700 text-white px-4 py-1 rounded-full hover:bg-red-800 transition"
+                  >
+                    DELETE
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
-      {showModal && (
+      {showModal && selectedBooking && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-[#faf8f3] p-8 rounded-xl w-full max-w-md space-y-4">
             <h2 className="text-xl font-bold text-[#2d5016]">
-              Create Quotation
+              Create Quotation for {selectedBooking.full_name}
             </h2>
 
             <div className="flex gap-4 p-2">
@@ -146,7 +163,7 @@ export default function BookingsTable({
             {quoteItems.map((item, i) => (
               <div key={i} className="flex gap-2">
                 <input
-                  placeholder="Name"
+                  placeholder="Item Name"
                   value={item.name}
                   onChange={(e) => updateQuoteItem(i, "name", e.target.value)}
                   className="border p-2 w-full rounded"
@@ -160,30 +177,33 @@ export default function BookingsTable({
                 />
                 <button
                   onClick={() => removeQuoteItem(i)}
-                  className="text-red-600 font-bold"
+                  className="text-red-600 font-bold px-2"
                 >
                   X
                 </button>
               </div>
             ))}
+
             <button
               onClick={addQuoteItem}
               className="text-sm text-[#2d5016] font-bold"
             >
               + Add Item
             </button>
-            <div className="text-lg font-bold">
-              Total: {totalPrice.toFixed(2)}
+
+            <div className="flex items-center justify-between border-t pt-4">
+              <span className="font-bold">Total: {totalPrice.toFixed(2)}</span>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="border p-1 rounded"
+              >
+                <option value="KES">KES</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
             </div>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full border p-3 rounded"
-            >
-              <option value="KES">KES</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-            </select>
+
             <div className="flex gap-3 pt-4">
               <button
                 onClick={() => setShowModal(false)}

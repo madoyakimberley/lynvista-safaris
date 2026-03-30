@@ -8,6 +8,7 @@ export default function BookingsClient({ initialBookings }) {
   const [bookings, setBookings] = useState(initialBookings || []);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+  const [sentQuotations, setSentQuotations] = useState({});
 
   async function refresh() {
     try {
@@ -19,7 +20,7 @@ export default function BookingsClient({ initialBookings }) {
     }
   }
 
-  const filtered = bookings
+  const filtered = (bookings || [])
     .filter((b) =>
       (b.full_name || "").toLowerCase().includes(search.toLowerCase()),
     )
@@ -38,20 +39,8 @@ export default function BookingsClient({ initialBookings }) {
     }
   }
 
-  async function cancelBooking(id) {
-    try {
-      await fetch("/api/admin/bookings/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: id }),
-      });
-      await refresh();
-    } catch (error) {
-      console.error("Error cancelling booking", error);
-    }
-  }
-
   async function deleteBooking(id) {
+    if (!confirm("Are you sure you want to delete this booking?")) return;
     try {
       await fetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
       await refresh();
@@ -60,14 +49,20 @@ export default function BookingsClient({ initialBookings }) {
     }
   }
 
+  // Updated to accept 'currency' from the modal
   async function sendPaymentLink(
     id,
     quoted_price,
-    payment_method,
     items,
     email,
+    payment_method,
     currency,
   ) {
+    if (!id || !quoted_price || !items || !email || !payment_method) {
+      alert("Missing required fields before sending.");
+      return;
+    }
+
     try {
       const res = await fetch("/api/admin/bookings/quote", {
         method: "POST",
@@ -75,26 +70,33 @@ export default function BookingsClient({ initialBookings }) {
         body: JSON.stringify({
           id,
           quoted_price,
-          payment_method,
           items,
           email,
           currency,
+          payment_method,
         }),
       });
+
       const data = await res.json();
-      if (data.success) {
-        window.location.href = data.paymentLink; // Redirect to Paystack
-      } else {
-        alert("Error: " + data.error);
+
+      if (!res.ok || !data.success) {
+        console.error("SERVER ERROR:", data.error || "Unknown error");
+        alert(`Error: ${data.error || "Failed to send quotation."}`);
+        return;
       }
-    } catch (error) {
-      console.error("Failed to process quote", error);
+
+      alert("Quotation sent successfully!");
+      setSentQuotations((prev) => ({ ...prev, [id]: true }));
+      await refresh(); // Refresh to update status
+    } catch (err) {
+      console.error("Network error:", err);
+      alert("Network error occurred. Check your connection.");
     }
   }
 
   return (
-    <div className="bg-[#faf8f3] min-h-screen p-4 md:p-12 text-[#2d1b0b]">
-      <h1 className="text-4xl font-heading mb-12 text-[#2d5016]">
+    <div className="min-h-screen p-4 md:p-12 text-(--color-dark) bg-(--color-light)">
+      <h1 className="text-4xl font-heading mb-12 text-(--color-primary)">
         Manage Bookings
       </h1>
 
@@ -106,37 +108,33 @@ export default function BookingsClient({ initialBookings }) {
               placeholder="Search name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-[#5c3d2e]/30 bg-white text-[#2d1b0b] rounded-l-md px-4 py-3 focus:outline-none focus:border-[#fbbf24]"
+              className="w-full border px-4 py-3 rounded-full shadow-sm focus:ring-2 focus:ring-(--color-primary)"
             />
-            <button className="bg-[#fbbf24] px-5 rounded-r-md text-[#2d1b0b] font-bold hover:bg-[#d97706] transition-colors">
+            <button className="px-5 bg-(--color-primary-light) text-white rounded-full ml-2 flex items-center justify-center">
               <Search size={22} />
             </button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-lg font-bold">Payment Status</label>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full border border-[#5c3d2e]/30 bg-white text-[#2d1b0b] rounded-md px-4 py-3 focus:outline-none cursor-pointer"
-          >
-            <option value="All">All</option>
-            <option value="Pending">Pending</option>
-            <option value="Quotation Sent">Quotation Sent</option>
-            <option value="Paid">Paid</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="w-full border px-4 py-3 rounded-full shadow-sm focus:ring-2 focus:ring-(--color-primary)"
+        >
+          <option value="All">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Quotation Sent">Quotation Sent</option>
+          <option value="Paid">Paid</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
       </div>
 
       <BookingsTable
         bookings={filtered}
         markPaid={markPaid}
-        cancelBooking={cancelBooking}
         deleteBooking={deleteBooking}
         sendPaymentLink={sendPaymentLink}
-        setBookings={setBookings}
+        sentQuotations={sentQuotations}
       />
     </div>
   );
