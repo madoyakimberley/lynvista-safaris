@@ -21,7 +21,7 @@ export default function AdminLayout({ children }) {
   const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Bookings", href: "/admin/bookings", icon: Calendar },
-    { name: "Services", href: "/admin/services", icon: Package },
+
     { name: "Payments", href: "/admin/payments", icon: DollarSign },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
