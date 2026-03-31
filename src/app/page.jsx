@@ -46,7 +46,7 @@ export default function HomePage() {
               data-aos-delay="400"
             >
               <a
-                href="/services"
+                href="/destinations"
                 className="flex items-center justify-center gap-2 py-5 px-8 bg-(--color-primary-green) text-white text-xl font-bold rounded-[40px] shadow-lg hover:scale-105 transition-all"
               >
                 Explore Safari <ArrowRight size={24} />
