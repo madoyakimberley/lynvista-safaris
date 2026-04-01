@@ -9,7 +9,7 @@ export default function NotFound() {
       {/* Background Image Container */}
       <div className="absolute inset-0 w-full h-full z-0">
         <img
-          src="/images/404.jpg"
+          src="/images/404.WebP"
           alt="404 Safari Path Not Found"
           className="w-full h-full object-cover md:object-contain bg-black"
         />

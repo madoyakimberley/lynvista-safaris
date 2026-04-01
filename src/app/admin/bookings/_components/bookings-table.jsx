@@ -49,7 +49,7 @@ export default function BookingsTable({
       quoteItems,
       selectedBooking.email,
       paymentMethod,
-      currency, // Passing currency state to parent function
+      currency,
     );
 
     setShowModal(false);

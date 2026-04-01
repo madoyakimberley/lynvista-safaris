@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import BookingsTable from "./bookings-table";
 
@@ -13,12 +13,18 @@ export default function BookingsClient({ initialBookings }) {
   async function refresh() {
     try {
       const res = await fetch("/api/admin/bookings", { cache: "no-store" });
+      if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
       const data = await res.json();
-      if (Array.isArray(data)) setBookings(data);
+      setBookings(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Failed to refresh bookings", error);
+      console.error("Failed to refresh bookings:", error);
+      setBookings([]);
     }
   }
+
+  useEffect(() => {
+    refresh(); // initial load
+  }, []);
 
   const filtered = (bookings || [])
     .filter((b) =>
@@ -28,28 +34,31 @@ export default function BookingsClient({ initialBookings }) {
 
   async function markPaid(id) {
     try {
-      await fetch("/api/admin/bookings/mark-paid", {
+      const res = await fetch("/api/admin/bookings/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
+      if (!res.ok) throw new Error("Failed to mark as paid");
       await refresh();
     } catch (error) {
-      console.error("Error marking paid", error);
+      console.error("Error marking paid:", error);
     }
   }
 
   async function deleteBooking(id) {
     if (!confirm("Are you sure you want to delete this booking?")) return;
     try {
-      await fetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/bookings/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete booking");
       await refresh();
     } catch (error) {
-      console.error("Error deleting booking", error);
+      console.error("Error deleting booking:", error);
     }
   }
 
-  // Updated to accept 'currency' from the modal
   async function sendPaymentLink(
     id,
     quoted_price,
@@ -87,7 +96,7 @@ export default function BookingsClient({ initialBookings }) {
 
       alert("Quotation sent successfully!");
       setSentQuotations((prev) => ({ ...prev, [id]: true }));
-      await refresh(); // Refresh to update status
+      await refresh();
     } catch (err) {
       console.error("Network error:", err);
       alert("Network error occurred. Check your connection.");

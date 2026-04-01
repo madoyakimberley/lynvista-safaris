@@ -2,9 +2,6 @@
 
 import { ArrowRight } from "lucide-react";
 
-/* Components */
-import MainNav from "./_components/headers/main-nav";
-import MainFooter from "./_components/footers/main-footer";
 import BodyWrapper from "./_components/wrappers/BodyWrapper";
 import AOSWrapper from "./_components/wrappers/AOSWrapper";
 
@@ -16,7 +13,7 @@ export default function HomePage() {
           className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('/images/homepage.jpg')",
+              "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('/images/homepage.WebP')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",

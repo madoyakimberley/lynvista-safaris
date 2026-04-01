@@ -16,6 +16,7 @@ export default function useStaticServices() {
       icon: Plane,
       title: "Air Ticketing & Flight Reservations",
       description: "Local and international flight booking services",
+      image: "/images/services/air-ticketing.webp",
       process: [
         "We search for the best routes and timings for your travel.",
         "We compare multiple airlines to get the most convenient and cost-effective flights.",
@@ -36,6 +37,7 @@ export default function useStaticServices() {
       icon: Hotel,
       title: "Hotel & Accommodation",
       description: "Lodges, resorts, camps, and apartments",
+      image: "/images/services/hotel-accommodation.webp",
       process: [
         "We select hotels, lodges, and apartments that match your preferences.",
         "We ensure prime locations and comfort for your stay.",
@@ -56,6 +58,7 @@ export default function useStaticServices() {
       icon: Settings,
       title: "Custom Travel Itineraries",
       description: "Tailor-made travel planning",
+      image: "/images/services/custom-itineraries.webp",
       process: [
         "We consult with you to understand your travel goals.",
         "We design personalized travel itineraries based on your preferences.",
@@ -76,6 +79,7 @@ export default function useStaticServices() {
       icon: Car,
       title: "Transport & Transfers",
       description: "Reliable movement services",
+      image: "/images/services/transport-transfers.webp",
       process: [
         "We arrange airport pickups, drop-offs, and local transportation.",
         "We ensure safe and timely transfers with professional drivers.",
@@ -96,6 +100,7 @@ export default function useStaticServices() {
       icon: Car,
       title: "Car Hire & Chauffeur",
       description: "Private and professional transport",
+      image: "/images/services/car-hire.webp",
       process: [
         "We provide self-drive or chauffeur-driven vehicle options.",
         "We ensure vehicles are clean, safe, and reliable.",
@@ -116,6 +121,7 @@ export default function useStaticServices() {
       icon: Shield,
       title: "Travel Insurance",
       description: "Secure your journey",
+      image: "/images/services/travel-insurance.webp",
       process: [
         "We recommend suitable travel insurance plans.",
         "We handle policy purchase and coverage details.",
@@ -136,6 +142,7 @@ export default function useStaticServices() {
       icon: FileText,
       title: "Visa & Documentation",
       description: "Travel documentation support",
+      image: "/images/services/visa-documentation.webp",
       process: [
         "We guide you through the visa application process.",
         "We prepare and review all required documents.",
@@ -156,6 +163,7 @@ export default function useStaticServices() {
       icon: Settings,
       title: "Tour Guiding",
       description: "Professional safari and travel guides",
+      image: "/images/services/tour-guiding.webp",
       process: [
         "We provide experienced local guides for your tours.",
         "We ensure safe and informative experiences.",
@@ -176,6 +184,7 @@ export default function useStaticServices() {
       icon: Headphones,
       title: "24/7 Travel Support",
       description: "Always available assistance",
+      image: "/images/services/24-7-support.webp",
       process: [
         "We offer round-the-clock support for emergencies or changes.",
         "We answer inquiries and provide real-time assistance.",

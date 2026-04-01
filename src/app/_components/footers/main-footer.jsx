@@ -156,7 +156,7 @@ function MainFooter() {
       <div className="mt-16 border-t border-[#5c3d2e] pt-12 text-center">
         <div className="container mx-auto px-6 flex flex-col items-center gap-6">
           <img
-            src="/images/initials.png"
+            src="/images/initials.WebP"
             alt="Lynvista initials"
             className="h-16 opacity-60 hover:opacity-100 transition-opacity duration-300"
           />

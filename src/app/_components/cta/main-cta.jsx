@@ -12,7 +12,7 @@ export default function MainNav() {
         {/* Logo from public/images/logo.png */}
         <div className="bg-white p-1 rounded-sm">
           <img
-            src="/images/logo.png"
+            src="/images/logo.WebP"
             alt="Lynvista Safaris Logo"
             className="h-12 w-auto object-contain"
           />
