@@ -88,21 +88,19 @@ export default function BookingsClient({ initialBookings }) {
 
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
-        console.error("SERVER ERROR:", data.error || "Unknown error");
-        alert(`Error: ${data.error || "Failed to send quotation."}`);
-        return;
+      if (res.ok) {
+        alert("Quotation sent! Client can now pay via " + payment_method);
+        // Logic to show "Client Chose Card" in the UI
+        setSentQuotations((prev) => ({
+          ...prev,
+          [id]: `Sent: ${payment_method}`,
+        }));
+        await refresh();
       }
-
-      alert("Quotation sent successfully!");
-      setSentQuotations((prev) => ({ ...prev, [id]: true }));
-      await refresh();
     } catch (err) {
-      console.error("Network error:", err);
-      alert("Network error occurred. Check your connection.");
+      console.error(err);
     }
   }
-
   return (
     <div className="min-h-screen p-4 md:p-12 text-(--color-dark) bg-(--color-light)">
       <h1 className="text-4xl font-heading mb-12 text-(--color-primary)">

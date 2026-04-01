@@ -8,9 +8,8 @@ export async function GET(req) {
   const reference = searchParams.get("reference");
 
   if (!reference) {
-    return NextResponse.json(
-      { success: false, message: "No reference provided" },
-      { status: 400 },
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/payment-error?reason=no_reference`,
     );
   }
 
@@ -21,53 +20,94 @@ export async function GET(req) {
       `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
       {
         headers: {
-          // Ensure .trim() to match your working POST handler
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`.trim(),
         },
       },
     );
 
     const result = await paystackRes.json();
+
     console.log(
       ">>> [PAYSTACK VERIFY RESPONSE]:",
       JSON.stringify(result, null, 2),
     );
 
-    if (result.status && result.data.status === "success") {
-      const bookingId = result.data.metadata?.bookingId;
+    if (!result.status || result.data.status !== "success") {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/payment-error?reason=not_success`,
+      );
+    }
 
-      if (!bookingId) {
-        throw new Error(
-          "Payment successful, but no Booking ID found in metadata.",
-        );
-      }
+    const data = result.data;
 
-      // Update the booking status in the DB
-      await db
-        .update(bookings)
-        .set({
-          payment_status: "Paid",
-          paystack_reference: reference,
-        })
-        .where(eq(bookings.id, bookingId));
+    /**
+     * ===================== EXTRACT =====================
+     */
+    const bookingId = Number(data.metadata?.bookingId);
+    const paidAmount = data.amount; // in kobo (KES * 100)
+    const currency = data.currency;
 
-      console.log(`>>> [SUCCESS] Booking ${bookingId} marked as PAID.`);
+    if (!bookingId) {
+      throw new Error("No booking ID in metadata");
+    }
 
-      // Redirect the user to your success page
+    /**
+     * ===================== FETCH BOOKING =====================
+     */
+    const existingBooking = await db.query.bookings.findFirst({
+      where: eq(bookings.id, bookingId),
+    });
+
+    if (!existingBooking) {
+      throw new Error("Booking not found");
+    }
+
+    /**
+     * ===================== DOUBLE PAYMENT PROTECTION =====================
+     */
+    if (existingBooking.payment_status === "Paid") {
+      console.log(">>> Already paid, skipping update");
+
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success?id=${bookingId}`,
       );
     }
 
-    return NextResponse.json(
-      { success: false, message: "Payment not verified" },
-      { status: 400 },
+    /**
+     * ===================== AMOUNT VALIDATION =====================
+     */
+    const expectedAmount = Math.round(
+      Number(existingBooking.quoted_price) * 100,
+    );
+
+    if (paidAmount !== expectedAmount) {
+      throw new Error("Amount mismatch - possible fraud");
+    }
+
+    /**
+     * ===================== UPDATE DB =====================
+     */
+    await db
+      .update(bookings)
+      .set({
+        payment_status: "Paid",
+        paystack_reference: reference,
+      })
+      .where(eq(bookings.id, bookingId));
+
+    console.log(`>>> [SUCCESS] Booking ${bookingId} marked as PAID.`);
+
+    /**
+     * ===================== REDIRECT =====================
+     */
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success?id=${bookingId}`,
     );
   } catch (err) {
     console.error(">>> [VERIFY ERROR]:", err.message);
-    return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 500 },
+
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/payment-error?reason=server_error`,
     );
   }
 }
