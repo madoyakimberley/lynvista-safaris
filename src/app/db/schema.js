@@ -1,6 +1,5 @@
 import {
   mysqlTable,
-  serial,
   varchar,
   int,
   text,
@@ -15,7 +14,8 @@ import {
    ADMINS
 ======================= */
 export const admins = mysqlTable("admins", {
-  id: serial("id").primaryKey(),
+  // Using int + autoincrement instead of serial to prevent TiDB conflict
+  id: int("id").primaryKey().autoincrement(),
   email: varchar("email", { length: 150 }).notNull().unique(),
   password_hash: varchar("password_hash", { length: 255 }).notNull(),
   role: mysqlEnum("role", ["super_admin", "admin"]).notNull().default("admin"),
@@ -26,7 +26,7 @@ export const admins = mysqlTable("admins", {
    TOURS
 ======================= */
 export const tours = mysqlTable("tours", {
-  id: serial("id").primaryKey(),
+  id: int("id").primaryKey().autoincrement(),
   title: varchar("title", { length: 150 }).notNull(),
   slug: varchar("slug", { length: 150 }).notNull().unique(),
   description: text("description").notNull(),
@@ -40,7 +40,7 @@ export const tours = mysqlTable("tours", {
    SERVICES
 ======================= */
 export const services = mysqlTable("services", {
-  id: serial("id").primaryKey(),
+  id: int("id").primaryKey().autoincrement(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
   icon_name: varchar("icon_name", { length: 50 }).notNull(),
@@ -66,7 +66,7 @@ export const tourServices = mysqlTable(
    BOOKINGS
 ======================= */
 export const bookings = mysqlTable("bookings", {
-  id: serial("id").primaryKey(),
+  id: int("id").primaryKey().autoincrement(),
   full_name: varchar("full_name", { length: 100 }).notNull(),
   email: varchar("email", { length: 100 }).notNull(),
   phone: varchar("phone", { length: 30 }).notNull(),
@@ -132,8 +132,8 @@ export const bookings = mysqlTable("bookings", {
    QUOTES
 ======================= */
 export const quotes = mysqlTable("quotes", {
-  id: serial("id").primaryKey(),
-  booking_id: int("booking_id").notNull(), // should exist in bookings
+  id: int("id").primaryKey().autoincrement(),
+  booking_id: int("booking_id").notNull(),
   total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   payment_method: mysqlEnum("payment_method", ["Paystack", "M-Pesa"]).notNull(),
   payment_link: text("payment_link"),
@@ -144,8 +144,8 @@ export const quotes = mysqlTable("quotes", {
    QUOTE ITEMS
 ======================= */
 export const quoteItems = mysqlTable("quote_items", {
-  id: serial("id").primaryKey(),
-  quote_id: int("quote_id").notNull(), // FK to quotes.id
+  id: int("id").primaryKey().autoincrement(),
+  quote_id: int("quote_id").notNull(),
   item_name: varchar("item_name", { length: 150 }).notNull(),
   item_price: decimal("item_price", { precision: 10, scale: 2 }).notNull(),
 });
@@ -154,7 +154,7 @@ export const quoteItems = mysqlTable("quote_items", {
    BOOKING SERVICES (M:N)
 ======================= */
 export const bookingServices = mysqlTable("booking_services", {
-  id: serial("id").primaryKey(),
+  id: int("id").primaryKey().autoincrement(),
   booking_id: int("booking_id").notNull(),
   service_id: int("service_id").notNull(),
 });
@@ -163,7 +163,7 @@ export const bookingServices = mysqlTable("booking_services", {
    AUDIT LOGS
 ======================= */
 export const auditLogs = mysqlTable("audit_logs", {
-  id: serial("id").primaryKey(),
+  id: int("id").primaryKey().autoincrement(),
   admin_id: int("admin_id").notNull(),
   action: varchar("action", { length: 255 }).notNull(),
   created_at: timestamp("created_at").defaultNow(),

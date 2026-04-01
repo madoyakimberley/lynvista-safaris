@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 export default function WhatsAppButton() {
-  const phoneNumber = "254123456789";
+  const phoneNumber = "254793696522";
   const message = "Hello Lynvista Safaris! I'd like to inquire about a trip.";
 
   return (
