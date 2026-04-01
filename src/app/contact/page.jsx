@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 import AOSWrapper from "../_components/wrappers/AOSWrapper";
 import Image from "next/image";
@@ -9,28 +9,35 @@ import Skeleton from "../_components/Skeleton/page";
 export default function ContactPage() {
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // FALLBACK: Ensures skeleton hides if image is cached or fails to trigger onLoadingComplete
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 2000); // 2-second safety fallback
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="min-h-screen bg-(--color-light) relative">
-      {/* 1. FULL PAGE SKELETON (Visible until image loads) */}
+      {/* 1. FULL PAGE SKELETON (Fixed to viewport to prevent white gaps on scroll) */}
       {!isLoaded && (
-        <div className="absolute inset-0 z-50 bg-white">
+        <div className="fixed inset-0 z-50 bg-white">
           <Skeleton />
         </div>
       )}
 
       {/* 2. THE ACTUAL CONTENT */}
-      {/* We keep the height consistent so the footer doesn't jump */}
       <div
         className={`transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}
       >
         {/* Hero Section */}
-        <div className="relative h-125 flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+        <div className="relative h-125 flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-black">
           {/* Optimized Image */}
           <Image
-            src="/images/contact.webp" // convert your JPG to WebP for speed
+            src="/images/contact.WebP"
             alt="Contact Hero"
             fill
-            className="object-cover"
+            className="object-cover opacity-70"
             onLoadingComplete={() => setIsLoaded(true)}
             priority
           />
@@ -67,18 +74,20 @@ export default function ContactPage() {
                 <p className="text-md text-(--color-dark-muted) mb-4">
                   +254793696522 / +254 718108358
                 </p>
-                <a
-                  href="tel:+254793696522"
-                  className="text-md font-bold text-(--color-secondary-orange) hover:underline"
-                >
-                  Call Now
-                </a>
-                <a
-                  href="tel:+254 718108358"
-                  className="text-md font-bold text-(--color-secondary-orange) hover:underline"
-                >
-                  or Call
-                </a>
+                <div className="flex flex-col gap-1">
+                  <a
+                    href="tel:+254793696522"
+                    className="text-md font-bold text-(--color-secondary-orange) hover:underline"
+                  >
+                    Call Now
+                  </a>
+                  <a
+                    href="tel:+254718108358"
+                    className="text-md font-bold text-(--color-secondary-orange) hover:underline"
+                  >
+                    or Call Alternative
+                  </a>
+                </div>
               </div>
             </AOSWrapper>
 

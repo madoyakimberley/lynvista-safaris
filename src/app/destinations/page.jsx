@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Calendar, MapPin, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image"; // <---- Use Next.js Image for optimization
+import Image from "next/image";
 import Skeleton from "../_components/Skeleton/page";
 
 export default function DestinationsPage() {
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // FALLBACK: If the image is cached, onLoadingComplete might not fire.
+  // This ensures the skeleton hides regardless after a short delay.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 2000); // 2-second safety fallback
+    return () => clearTimeout(timer);
+  }, []);
 
   const destinations = [
     {
@@ -19,7 +28,7 @@ export default function DestinationsPage() {
       base_price: 500,
       duration: "3 Days",
       location: "Kenya",
-      image: "/images/dest1.webp",
+      image: "/images/dest1.WebP",
     },
     {
       id: 2,
@@ -28,7 +37,7 @@ export default function DestinationsPage() {
       base_price: 300,
       duration: "2 Days",
       location: "Kenya",
-      image: "/images/dest2.webp",
+      image: "/images/dest2.WebP",
     },
     {
       id: 3,
@@ -37,7 +46,7 @@ export default function DestinationsPage() {
       base_price: 400,
       duration: "2-5 Days",
       location: "Kenya",
-      image: "/images/dest3.webp",
+      image: "/images/dest3.WebP",
     },
     {
       id: 4,
@@ -46,7 +55,7 @@ export default function DestinationsPage() {
       base_price: 200,
       duration: "1-2 Days",
       location: "Kenya",
-      image: "/images/dest4.webp",
+      image: "/images/dest4.WebP",
     },
     {
       id: 5,
@@ -55,7 +64,7 @@ export default function DestinationsPage() {
       base_price: 1000,
       duration: "5-10 Days",
       location: "Various",
-      image: "/images/dest5.webp",
+      image: "/images/dest5.WebP",
     },
     {
       id: 6,
@@ -65,7 +74,7 @@ export default function DestinationsPage() {
       base_price: 250,
       duration: "2-7 Days",
       location: "Kenya",
-      image: "/images/dest6.webp",
+      image: "/images/dest6.WebP",
     },
   ];
 
@@ -76,7 +85,7 @@ export default function DestinationsPage() {
 
   return (
     <div className="min-h-screen bg-(--color-light) relative">
-      {/* 1. FULL PAGE SKELETON (Visible until image loads) */}
+      {/* 1. FULL PAGE SKELETON (Visible until image loads or timeout) */}
       {!isLoaded && (
         <div className="fixed inset-0 z-50 bg-white">
           <Skeleton />
@@ -89,21 +98,20 @@ export default function DestinationsPage() {
       >
         {/* HERO SECTION */}
         <div className="relative h-150 flex flex-col items-center justify-center text-center px-6">
-          {/* Optimized Hero Image with loading trigger */}
           <Image
-            src="/images/tourdest.webp"
+            src="/images/tourdest.WebP"
             alt="Destinations Hero"
             fill
             className="object-cover"
             onLoadingComplete={() => setIsLoaded(true)}
             priority
+            unoptimized={process.env.NODE_ENV === "development"} // Helps with local build testing
           />
-          {/* Gradient Overlay applied over the Image */}
           <div className="absolute inset-0 bg-black/40 z-0"></div>
 
           <motion.div
             initial="hidden"
-            animate="show"
+            animate={isLoaded ? "show" : "hidden"}
             variants={fadeUp}
             transition={{ duration: 0.8 }}
             className="z-10"
@@ -122,7 +130,7 @@ export default function DestinationsPage() {
           {/* FLOATING SEARCH BAR */}
           <motion.div
             initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
             transition={{ delay: 0.4, duration: 0.6 }}
             className="absolute -bottom-10 w-full max-w-5xl px-4 z-20"
           >
@@ -210,7 +218,7 @@ export default function DestinationsPage() {
                     alt={dest.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    priority={index < 3} // load top 3 immediately, lazy load the rest
+                    priority={index < 3}
                   />
                   <div className="absolute top-6 right-6 bg-(--color-secondary-orange) text-white px-5 py-1.5 rounded-full font-black text-sm shadow-xl">
                     ${dest.base_price}
