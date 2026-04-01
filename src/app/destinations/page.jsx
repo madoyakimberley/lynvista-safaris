@@ -78,7 +78,7 @@ export default function DestinationsPage() {
     <div className="min-h-screen bg-(--color-light) relative">
       {/* 1. FULL PAGE SKELETON (Visible until image loads) */}
       {!isLoaded && (
-        <div className="absolute inset-0 z-50 bg-white">
+        <div className="fixed inset-0 z-50 bg-white">
           <Skeleton />
         </div>
       )}
@@ -300,9 +300,11 @@ export default function DestinationsPage() {
                   <p className="text-lg text-(--color-dark-muted) leading-relaxed mb-10 italic">
                     "{selectedDestination.description}"
                   </p>
-                  <button className="w-full bg-(--color-primary-green) text-white py-5 rounded-3xl font-black text-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
-                    Book Now
-                  </button>
+                  <a href="/book" className="block w-full">
+                    <button className="w-full bg-(--color-primary-green) text-white py-5 rounded-3xl font-black text-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                      Book Now
+                    </button>
+                  </a>
                 </div>
               </motion.div>
             </div>
