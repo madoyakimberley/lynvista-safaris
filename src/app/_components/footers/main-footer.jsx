@@ -55,10 +55,10 @@ function MainFooter() {
                   </span>
                 </div>
                 <a
-                  href="mailto:info@lynvistasafaris.com"
+                  href="mailto:lynvistasafaris@outlook.com"
                   className="hover:text-[#fbbf24] transition-colors"
                 >
-                  info@lynvistasafaris.com
+                  lynvistasafaris@outlook.com
                 </a>
               </div>
             </div>
