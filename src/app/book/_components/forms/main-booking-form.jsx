@@ -89,25 +89,25 @@ export default function MainBookingForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-4xl mx-auto bg-(--color-light) rounded-3xl shadow-2xl p-8 md:p-12 border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6"
+      className="max-w-4xl mx-auto bg-(--color-light) rounded-3xl shadow-2xl p-6 md:p-12 border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-6"
     >
-      <h1 className="col-span-2 text-4xl font-heading text-[#442c23] text-center mb-2">
+      <h1 className="col-span-1 md:col-span-2 text-3xl md:text-4xl font-heading text-[#442c23] text-center mb-2">
         Book Your Trip
       </h1>
 
-      <div className="col-span-2 w-24 h-1 bg-(--color-secondary) mx-auto rounded-full" />
+      <div className="col-span-1 md:col-span-2 w-24 h-1 bg-(--color-secondary) mx-auto rounded-full mb-4" />
 
       {success && (
         <div
           id="booking-success"
-          className="col-span-2 bg-green-100 text-[#442c23] p-4 rounded-xl text-center font-semibold"
+          className="col-span-1 md:col-span-2 bg-green-100 text-[#442c23] p-4 rounded-xl text-center font-semibold"
         >
           Booking Successful! Redirecting...
         </div>
       )}
 
       {/* Passenger Info */}
-      <div className="col-span-2 flex flex-col">
+      <div className="col-span-1 md:col-span-2 flex flex-col">
         <label className={labelStyle}>Name</label>
         <input
           name="full_name"
@@ -117,7 +117,7 @@ export default function MainBookingForm() {
         />
       </div>
 
-      <div className="flex flex-col">
+      <div className="col-span-1 md:col-span-1 flex flex-col">
         <label className={labelStyle}>Email</label>
         <input
           type="email"
@@ -128,7 +128,7 @@ export default function MainBookingForm() {
         />
       </div>
 
-      <div className="flex flex-col">
+      <div className="col-span-1 md:col-span-1 flex flex-col">
         <label className={labelStyle}>Phone</label>
         <input
           name="phone"
@@ -139,7 +139,7 @@ export default function MainBookingForm() {
       </div>
 
       {/* Tour Selection */}
-      <div className="col-span-2 text-[#442c23]">
+      <div className="col-span-1 md:col-span-2 text-[#442c23]">
         <SelectMenu
           label="Select Tour Package"
           options={tours?.map((t) => t.title) || []}
@@ -149,9 +149,9 @@ export default function MainBookingForm() {
       </div>
 
       {/* Payment Method */}
-      <div className="col-span-2 flex flex-col gap-2">
+      <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
         <label className={labelStyle}>Preferred Payment Method</label>
-        <div className="flex gap-8 p-4 border border-(--color-dark-muted) rounded-xl bg-white">
+        <div className="flex flex-wrap gap-4 md:gap-8 p-4 border border-(--color-dark-muted) rounded-xl bg-white">
           {[
             { label: "Card Payment", value: "Stripe" },
             { label: "M-Pesa", value: "M-Pesa" },
@@ -173,7 +173,6 @@ export default function MainBookingForm() {
                   <div className={radioActiveStyle} />
                 )}
               </div>
-              {/* Text color set to dark brown */}
               <span className="ml-2 font-medium text-[#2d1b0b]">
                 {method.label}
               </span>
@@ -183,10 +182,10 @@ export default function MainBookingForm() {
       </div>
 
       {/* Flight Type */}
-      <div className="flex flex-col gap-2">
+      <div className="col-span-1 md:col-span-1 flex flex-col gap-2">
         <label className={labelStyle}>Flight Type</label>
-        <div className="flex gap-4">
-          {["None", "Domestic Flight", "International Flight"].map((type) => (
+        <div className="flex flex-wrap gap-3">
+          {["None", "Domestic", "International"].map((type) => (
             <label
               key={type}
               className="flex items-center gap-2 cursor-pointer text-[#442c23]"
@@ -199,17 +198,17 @@ export default function MainBookingForm() {
                 onChange={handleChange}
                 className="hidden peer"
               />
-              <div className="w-5 h-5 rounded-full border-2 border-(--color-dark-muted) peer-checked:border-(--color-primary) peer-checked:bg-(--color-primary) transition" />
-              <span className="text-xs">{type}</span>
+              <div className="w-5 h-5 rounded-full border-2 border-(--color-dark-muted) peer-checked:border-(--color-primary) peer-checked:bg-(--color-primary) transition shrink-0" />
+              <span className="text-xs font-medium">{type}</span>
             </label>
           ))}
         </div>
       </div>
 
       {/* Accommodation Type */}
-      <div className="text-[#442c23]">
+      <div className="col-span-1 md:col-span-1 text-[#442c23]">
         <SelectMenu
-          label="Accommodation Type"
+          label="Accommodation"
           options={["None", "Hotel", "Resort", "Lodge", "Camp", "Apartment"]}
           value={form.accommodation_type}
           onChange={(val) => setForm({ ...form, accommodation_type: val })}
@@ -217,21 +216,23 @@ export default function MainBookingForm() {
       </div>
 
       {/* Travel Dates */}
-      <div className="col-span-2 text-[#442c23]">
+      <div className="col-span-1 md:col-span-2 text-[#442c23]">
         <label className={labelStyle}>Trip Duration</label>
-        <CalendarPicker
-          startDate={form.travel_start_date}
-          endDate={form.travel_end_date}
-          minDate={today}
-          onChange={(s, e) =>
-            setForm({ ...form, travel_start_date: s, travel_end_date: e })
-          }
-        />
+        <div className="w-full overflow-hidden">
+          <CalendarPicker
+            startDate={form.travel_start_date}
+            endDate={form.travel_end_date}
+            minDate={today}
+            onChange={(s, e) =>
+              setForm({ ...form, travel_start_date: s, travel_end_date: e })
+            }
+          />
+        </div>
       </div>
 
       {/* Travelers */}
-      <div className="flex flex-col">
-        <label className={labelStyle}>Number of Adults</label>
+      <div className="col-span-1 md:col-span-1 flex flex-col">
+        <label className={labelStyle}>Adults</label>
         <input
           type="number"
           name="adults"
@@ -242,8 +243,8 @@ export default function MainBookingForm() {
         />
       </div>
 
-      <div className="flex flex-col">
-        <label className={labelStyle}>Number of Children</label>
+      <div className="col-span-1 md:col-span-1 flex flex-col">
+        <label className={labelStyle}>Children</label>
         <input
           type="number"
           name="children"
@@ -255,7 +256,7 @@ export default function MainBookingForm() {
       </div>
 
       {/* Currency */}
-      <div className="text-[#442c23]">
+      <div className="col-span-1 md:col-span-2 text-[#442c23]">
         <SelectMenu
           label="Currency"
           options={["KES", "USD", "EUR"]}
@@ -265,7 +266,7 @@ export default function MainBookingForm() {
       </div>
 
       {/* Notes */}
-      <div className="col-span-2 flex flex-col">
+      <div className="col-span-1 md:col-span-2 flex flex-col">
         <label className={labelStyle}>Special Requests</label>
         <textarea
           name="notes"
@@ -278,7 +279,7 @@ export default function MainBookingForm() {
       <button
         type="submit"
         disabled={loading}
-        className="col-span-2 bg-[#442c23] text-white font-heading py-4 rounded-xl hover:opacity-90 transition text-lg"
+        className="col-span-1 md:col-span-2 bg-[#442c23] text-white font-heading py-4 rounded-xl hover:opacity-90 transition text-lg mt-4 shadow-lg"
       >
         {loading ? "Submitting..." : "Submit Booking"}
       </button>
