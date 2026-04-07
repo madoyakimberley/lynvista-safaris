@@ -38,11 +38,16 @@ export default function MainBookingForm() {
   });
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    setForm({
-      ...form,
-      [name]: type === "number" ? parseInt(value) || 0 : value,
-    });
+    const { name, value, type, inputMode } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      // Handle numeric inputs for both standard number types and mobile numeric pads
+      [name]:
+        type === "number" || inputMode === "numeric"
+          ? parseInt(value) || 0
+          : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -56,6 +61,8 @@ export default function MainBookingForm() {
       travel_end_date: toSQL(form.travel_end_date),
       adults: Number(form.adults),
       children: Number(form.children),
+      // Crucial fix: Trim whitespace and ensure notes are sent as a clean string
+      notes: form.notes?.trim() || "",
       user_id: form.user_id || null,
     };
 
@@ -112,6 +119,7 @@ export default function MainBookingForm() {
         <input
           name="full_name"
           required
+          value={form.full_name}
           onChange={handleChange}
           className={inputStyle}
         />
@@ -123,6 +131,7 @@ export default function MainBookingForm() {
           type="email"
           name="email"
           required
+          value={form.email}
           onChange={handleChange}
           className={inputStyle}
         />
@@ -133,6 +142,7 @@ export default function MainBookingForm() {
         <input
           name="phone"
           required
+          value={form.phone}
           onChange={handleChange}
           className={inputStyle}
         />
@@ -235,8 +245,8 @@ export default function MainBookingForm() {
         <label className={labelStyle}>Adults</label>
         <input
           type="text"
-          inputMode="numeric" // Forces the numeric keypad on mobile
-          pattern="[0-9]*" // Specific hint for iOS to show the number pad
+          inputMode="numeric"
+          pattern="[0-9]*"
           name="adults"
           min="1"
           value={form.adults}
@@ -269,13 +279,15 @@ export default function MainBookingForm() {
         />
       </div>
 
-      {/* Notes */}
+      {/* Notes / Special Requests */}
       <div className="col-span-1 md:col-span-2 flex flex-col">
         <label className={labelStyle}>Special Requests</label>
         <textarea
           name="notes"
+          value={form.notes}
           onChange={handleChange}
           className={`${inputStyle} h-24`}
+          placeholder="Dietary requirements, accessibility needs, etc..."
         />
       </div>
 
@@ -283,7 +295,7 @@ export default function MainBookingForm() {
       <button
         type="submit"
         disabled={loading}
-        className="col-span-1 md:col-span-2 bg-[#442c23] text-white font-heading py-4 rounded-xl hover:opacity-90 transition text-lg mt-4 shadow-lg"
+        className="col-span-1 md:col-span-2 bg-[#442c23] text-white font-heading py-4 rounded-xl hover:opacity-90 transition text-lg mt-4 shadow-lg disabled:bg-gray-400"
       >
         {loading ? "Submitting..." : "Submit Booking"}
       </button>
