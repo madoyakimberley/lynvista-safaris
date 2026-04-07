@@ -234,7 +234,9 @@ export default function MainBookingForm() {
       <div className="col-span-1 md:col-span-1 flex flex-col">
         <label className={labelStyle}>Adults</label>
         <input
-          type="number"
+          type="text"
+          inputMode="numeric" // Forces the numeric keypad on mobile
+          pattern="[0-9]*" // Specific hint for iOS to show the number pad
           name="adults"
           min="1"
           value={form.adults}
