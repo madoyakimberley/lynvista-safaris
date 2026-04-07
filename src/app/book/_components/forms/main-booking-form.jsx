@@ -248,7 +248,9 @@ export default function MainBookingForm() {
       <div className="col-span-1 md:col-span-1 flex flex-col">
         <label className={labelStyle}>Children</label>
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           name="children"
           min="0"
           value={form.children}
