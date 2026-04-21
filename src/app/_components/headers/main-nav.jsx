@@ -41,35 +41,21 @@ function MainNav() {
       `}
     >
       <div className="container mx-auto flex justify-between items-center">
-        {/* LEFT */}
-        <div className="flex items-center z-10 xl:w-1/3">
+        {/* LEFT: Now contains the universal toggle */}
+        <div className="flex items-center z-10 w-1/3">
           <button
-            className="xl:hidden p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors"
+            className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors"
             onClick={() => setOpen(!open)}
             aria-label="Toggle Menu"
           >
             {open ? <X size={28} /> : <Menu size={28} />}
           </button>
 
-          <nav className="hidden xl:flex items-center gap-6 font-medium text-sm tracking-wide">
-            {navLinks.map((link, index) => (
-              <div key={link.href} className="flex items-center gap-6">
-                <a
-                  href={link.href}
-                  className="uppercase relative hover:text-[#fbbf24] transition-colors after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-[#fbbf24] after:transition-all hover:after:w-full"
-                >
-                  {link.label}
-                </a>
-                {index !== navLinks.length - 1 && (
-                  <span className="w-px h-5 bg-white/20" />
-                )}
-              </div>
-            ))}
-          </nav>
+          {/* Desktop inline nav removed from here */}
         </div>
 
-        {/* CENTER */}
-        <div className="flex flex-col items-center justify-center xl:w-1/3">
+        {/* CENTER: Logo Text */}
+        <div className="flex flex-col items-center justify-center w-1/3">
           <div className="flex flex-col items-center">
             <h1 className="text-xl sm:text-2xl md:text-3xl xl:text-4xl tracking-tight leading-none whitespace-nowrap font-heading font-bold text-center">
               <span className="text-white">LYNVISTA</span>{" "}
@@ -81,8 +67,8 @@ function MainNav() {
           </div>
         </div>
 
-        {/* RIGHT */}
-        <div className="flex items-center justify-end z-10 xl:w-1/3">
+        {/* RIGHT: Image Logo */}
+        <div className="flex items-center justify-end z-10 w-1/3">
           <a
             href="/"
             className="h-12 w-12 md:h-16 md:w-16 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"
@@ -96,11 +82,15 @@ function MainNav() {
         </div>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* DROPDOWN MENU: Now universal (removed xl:hidden) */}
       <div
-        className={`xl:hidden absolute left-0 right-0 top-full bg-[#2d1b0b] transition-all duration-500 ease-in-out rounded-b-3xl shadow-2xl border-t border-white/5 ${open ? "max-h-96 opacity-100 py-4 px-6" : "max-h-0 opacity-0 pointer-events-none"}`}
+        className={`absolute left-0 right-0 top-full bg-[#2d1b0b] transition-all duration-500 ease-in-out rounded-b-3xl shadow-2xl border-t border-white/5 ${
+          open
+            ? "max-h-96 opacity-100 py-4 px-6"
+            : "max-h-0 opacity-0 pointer-events-none"
+        }`}
       >
-        <div className="flex flex-col">
+        <div className="flex flex-col max-w-7xl mx-auto">
           {navLinks.map((link, index) => (
             <div key={link.label} className="w-full">
               <a
