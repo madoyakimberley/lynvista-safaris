@@ -30,7 +30,9 @@ export default function MainBookingForm() {
     children: 0,
     currency: "USD",
     notes: "",
-    payment_method: "Stripe",
+    // UPDATED: Default to a manual method
+    payment_method: "Bank Transfer",
+    // UPDATED: Status is 'Pending' until you send the quote
     payment_status: "Pending",
     managed_status: "Pending",
     quoted_price: 0,
@@ -158,13 +160,14 @@ export default function MainBookingForm() {
         />
       </div>
 
-      {/* Payment Method */}
+      {/* Payment Method Section */}
       <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
         <label className={labelStyle}>Preferred Payment Method</label>
         <div className="flex flex-wrap gap-4 md:gap-8 p-4 border border-(--color-dark-muted) rounded-xl bg-white">
           {[
-            { label: "Card Payment", value: "Stripe" },
+            { label: "Bank Transfer", value: "Bank Transfer" }, // Changed from Stripe
             { label: "M-Pesa", value: "M-Pesa" },
+            { label: "Cash", value: "Cash" }, // Added Cash option
           ].map((method) => (
             <label
               key={method.value}
@@ -195,7 +198,7 @@ export default function MainBookingForm() {
       <div className="col-span-1 md:col-span-1 flex flex-col gap-2">
         <label className={labelStyle}>Flight Type</label>
         <div className="flex flex-wrap gap-3">
-          {["None", "Domestic", "International"].map((type) => (
+          {["None", "Domestic Flight", "International Flight"].map((type) => (
             <label
               key={type}
               className="flex items-center gap-2 cursor-pointer text-[#442c23]"
@@ -214,6 +217,33 @@ export default function MainBookingForm() {
           ))}
         </div>
       </div>
+
+      {/* Conditional Cities - Only shows if flight is not "None" */}
+      {form.flight_type !== "None" && (
+        <>
+          <div className="col-span-1 md:col-span-1 flex flex-col">
+            <label className={labelStyle}>Departure City</label>
+            <input
+              name="departure_city"
+              placeholder="City or Airport"
+              value={form.departure_city}
+              onChange={handleChange}
+              className={inputStyle}
+            />
+          </div>
+
+          <div className="col-span-1 md:col-span-1 flex flex-col">
+            <label className={labelStyle}>Arrival City</label>
+            <input
+              name="arrival_city"
+              placeholder="City or Airport"
+              value={form.arrival_city}
+              onChange={handleChange}
+              className={inputStyle}
+            />
+          </div>
+        </>
+      )}
 
       {/* Accommodation Type */}
       <div className="col-span-1 md:col-span-1 text-[#442c23]">

@@ -63,7 +63,7 @@ export const tourServices = mysqlTable(
 );
 
 /* =======================
-   BOOKINGS
+   BOOKINGS (Updated)
 ======================= */
 export const bookings = mysqlTable("bookings", {
   id: int("id").primaryKey().autoincrement(),
@@ -72,44 +72,27 @@ export const bookings = mysqlTable("bookings", {
   phone: varchar("phone", { length: 30 }).notNull(),
   tour_package: varchar("tour_package", { length: 255 }),
 
-  flight_type: mysqlEnum("flight_type", [
-    "Domestic Flight",
-    "International Flight",
-    "None",
-  ]).default("None"),
-
-  departure_city: varchar("departure_city", { length: 100 }),
-  arrival_city: varchar("arrival_city", { length: 100 }),
-
-  accommodation_type: mysqlEnum("accommodation_type", [
-    "Hotel",
-    "Resort",
-    "Lodge",
-    "Camp",
-    "Apartment",
-    "None",
-  ]).default("None"),
-
-  checkin_date: date("checkin_date"),
-  checkout_date: date("checkout_date"),
-  travel_start_date: date("travel_start_date"),
-  travel_end_date: date("travel_end_date"),
-
-  adults: int("adults").default(1),
-  children: int("children").default(0),
+  // ... (keep flight and accommodation fields the same)
 
   currency: mysqlEnum("currency", ["EUR", "USD", "KES"])
     .notNull()
     .default("USD"),
-  notes: text("notes"),
+  notes: text("notes"), // User notes
+  admin_notes: text("admin_notes"), // NEW: Internal notes for the manual process
 
   quoted_price: decimal("quoted_price", { precision: 10, scale: 2 }),
+
+  // UPDATED: Added manual methods, removed Stripe/Paystack if you're fully transitioning
   payment_method: mysqlEnum("payment_method", [
-    "Stripe",
+    "Bank Transfer",
     "M-Pesa",
-    "Paystack",
+    "Cash",
+    "Other",
   ]).default(null),
-  payment_reference: varchar("payment_reference", { length: 255 }),
+
+  payment_reference: varchar("payment_reference", { length: 255 }), // User enters Tx ID here
+  payment_proof_url: varchar("payment_proof_url", { length: 500 }), // NEW: URL to uploaded receipt image
+
   payment_link_sent: mysqlEnum("payment_link_sent", ["Yes", "No"]).default(
     "No",
   ),
@@ -117,10 +100,13 @@ export const bookings = mysqlTable("bookings", {
   managed_status: mysqlEnum("managed_status", ["Pending", "Managed"]).default(
     "Pending",
   ),
+
+  // UPDATED: Clarified statuses for manual flow
   payment_status: mysqlEnum("payment_status", [
-    "Pending",
-    "Quotation Sent",
-    "Paid",
+    "Pending", // User just booked
+    "Quotation Sent", // Admin sent the price
+    "Awaiting Verification", // User says they paid, Admin needs to check bank
+    "Paid", // Admin confirmed
     "Cancelled",
   ]).default("Pending"),
 
