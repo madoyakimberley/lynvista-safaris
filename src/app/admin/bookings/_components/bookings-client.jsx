@@ -5,7 +5,12 @@ import { Search } from "lucide-react";
 import BookingsTable from "./bookings-table";
 
 export default function BookingsClient({ initialBookings }) {
-  const [bookings, setBookings] = useState(initialBookings || []);
+  // Fix: Handle initialBookings whether it's an array or the new object format
+  const [bookings, setBookings] = useState(
+    Array.isArray(initialBookings)
+      ? initialBookings
+      : initialBookings?.data || [],
+  );
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [sentQuotations, setSentQuotations] = useState({});
@@ -14,16 +19,19 @@ export default function BookingsClient({ initialBookings }) {
     try {
       const res = await fetch("/api/admin/bookings", { cache: "no-store" });
       if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
-      const data = await res.json();
-      setBookings(Array.isArray(data) ? data : []);
+      const result = await res.json();
+
+      // FIX: Access result.data because your API now returns { data: [...], pagination: {...} }
+      const actualData = Array.isArray(result) ? result : result.data;
+      setBookings(Array.isArray(actualData) ? actualData : []);
     } catch (error) {
       console.error("Failed to refresh bookings:", error);
-      setBookings([]);
+      // Don't set to empty immediately on error if we already have initialBookings
     }
   }
 
   useEffect(() => {
-    refresh(); // initial load
+    refresh();
   }, []);
 
   const filtered = (bookings || [])
@@ -49,6 +57,7 @@ export default function BookingsClient({ initialBookings }) {
   async function deleteBooking(id) {
     if (!confirm("Are you sure you want to delete this booking?")) return;
     try {
+      // FIX: Ensure this matches your route structure /api/admin/bookings/[id] or /api/admin/bookings
       const res = await fetch(`/api/admin/bookings/${id}`, {
         method: "DELETE",
       });
@@ -86,11 +95,8 @@ export default function BookingsClient({ initialBookings }) {
         }),
       });
 
-      const data = await res.json();
-
       if (res.ok) {
         alert("Quotation sent! Client can now pay via " + payment_method);
-        // Logic to show "Client Chose Card" in the UI
         setSentQuotations((prev) => ({
           ...prev,
           [id]: `Sent: ${payment_method}`,
@@ -101,6 +107,7 @@ export default function BookingsClient({ initialBookings }) {
       console.error(err);
     }
   }
+
   return (
     <div className="min-h-screen p-4 md:p-12 text-(--color-dark) bg-(--color-light)">
       <h1 className="text-4xl font-heading mb-12 text-(--color-primary)">

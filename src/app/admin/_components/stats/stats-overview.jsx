@@ -12,10 +12,14 @@ export default function StatsOverview() {
         cache: "no-store",
       });
 
-      const data = await res.json();
+      const result = await res.json();
 
-      if (Array.isArray(data)) {
-        setBookings(data);
+      // ✅ FIX: Access the 'data' array inside the response object
+      // Also handle the case where it might be a raw array for backward compatibility
+      const actualData = Array.isArray(result) ? result : result.data;
+
+      if (Array.isArray(actualData)) {
+        setBookings(actualData);
       } else {
         setBookings([]);
       }
@@ -35,6 +39,7 @@ export default function StatsOverview() {
     return () => clearInterval(interval);
   }, []);
 
+  // Compute stats based on the filtered data
   const totalBookings = bookings.length;
 
   const paidBookings = bookings.filter(
