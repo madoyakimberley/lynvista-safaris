@@ -5,8 +5,12 @@ export function middleware(req) {
   const token = req.cookies.get("admin_token")?.value;
 
   // 1. Define Public Routes
+  // Added /api/tours and /api/bookings so the public can book trips
   const isPublicRoute =
-    pathname === "/admin/login" || pathname.startsWith("/api/admin/auth");
+    pathname === "/admin/login" ||
+    pathname.startsWith("/api/admin/auth") ||
+    pathname === "/api/tours" ||
+    pathname === "/api/bookings";
 
   // 2. Protect Admin & API routes
   const isProtectedArea =
