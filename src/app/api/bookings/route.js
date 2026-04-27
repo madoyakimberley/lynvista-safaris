@@ -3,6 +3,15 @@ import { db } from "@/app/db/db";
 import { bookings } from "@/app/db/schema";
 import nodemailer from "nodemailer";
 
+// Setup transporter ONCE outside the request to prevent memory leaks/auth overhead
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -15,7 +24,6 @@ export async function POST(req) {
     }
 
     // MAP FRONTEND VALUES TO SCHEMA ENUMS
-    // This prevents the 500 error by ensuring currency and payment_method match your DB exactly
     const validCurrencies = ["EUR", "USD", "KES"];
     const submittedCurrency = body.currency?.toUpperCase();
     const finalCurrency = validCurrencies.includes(submittedCurrency)
@@ -32,14 +40,8 @@ export async function POST(req) {
       email: body.email,
       phone: body.phone,
       tour_package: body.tour_package || null,
-
-      // Handle Enum for Currency
       currency: finalCurrency,
-
-      // Handle Enum for Payment Method
       payment_method: finalPaymentMethod,
-
-      // Logic for null-checking other fields
       flight_type:
         body.flight_type === "None" ? null : body.flight_type || null,
       departure_city: body.departure_city || null,
@@ -52,33 +54,22 @@ export async function POST(req) {
       checkout_date: body.checkout_date || null,
       travel_start_date: body.travel_start_date || null,
       travel_end_date: body.travel_end_date || null,
-
-      // Types must match: int and decimal
       adults: parseInt(body.adults) || 1,
       children: parseInt(body.children) || 0,
       quoted_price: body.quoted_price ? String(body.quoted_price) : "0.00",
-
       notes: body.notes || null,
       payment_reference: body.payment_reference || null,
       managed_status: "Pending",
       payment_status: "Pending",
     };
 
-    // ================= SAVE BOOKING =================
-    const [newBooking] = await db
-      .insert(bookings)
-      .values(cleanedBody)
-      .returning();
+    // ================= SAVE BOOKING (MySQL Syntax) =================
+    // MySQL returns an array where the first item contains metadata like insertId
+    const [result] = await db.insert(bookings).values(cleanedBody);
 
-    // ================= EMAIL SETUP =================
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    const newBookingId = result.insertId;
 
+    // ================= EMAIL TEMPLATE =================
     const tour = body.tour_package || "Not specified";
     const startDate = body.travel_start_date || "N/A";
     const endDate = body.travel_end_date || "N/A";
@@ -104,25 +95,25 @@ export async function POST(req) {
       </div>
     `;
 
-    // Send Client Confirmation
-    await transporter.sendMail({
-      from: `"Lynvista Safaris" <${process.env.EMAIL_USER}>`,
-      to: body.email,
-      subject: "🎉 Booking Confirmation - Lynvista Safaris",
-      html: clientEmailTemplate,
-    });
-
-    // Send Admin Notification
-    await transporter.sendMail({
-      from: `"Lynvista System" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL,
-      subject: "🚨 New Booking Received",
-      html: `<p>New booking from ${body.full_name}. Check dashboard.</p>`,
-    });
+    // Send Emails
+    await Promise.all([
+      transporter.sendMail({
+        from: `"Lynvista Safaris" <${process.env.EMAIL_USER}>`,
+        to: body.email,
+        subject: "🎉 Booking Confirmation - Lynvista Safaris",
+        html: clientEmailTemplate,
+      }),
+      transporter.sendMail({
+        from: `"Lynvista System" <${process.env.EMAIL_USER}>`,
+        to: process.env.ADMIN_EMAIL,
+        subject: "🚨 New Booking Received",
+        html: `<p>New booking from ${body.full_name}. ID: ${newBookingId}</p>`,
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
-      booking: newBooking,
+      bookingId: newBookingId,
     });
   } catch (error) {
     console.error("Booking Error:", error);
