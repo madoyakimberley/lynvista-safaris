@@ -7,6 +7,16 @@ import useTours from "@/app/hooks/useTours";
 import CalendarPicker from "../ui/calendar-picker";
 import SelectMenu from "../ui/select-menu";
 
+// Hardcoded fallback data to ensure the form always works
+const HARDCODED_TOURS = [
+  "Safari Packages",
+  "Cultural & Community Tours",
+  "Group Tours & Excursions",
+  "Domestic Tours & Weekend Getaways",
+  "International Holiday Packages",
+  "Student Travel & Educational Tours",
+];
+
 export default function MainBookingForm() {
   const router = useRouter();
   const { createBooking, loading } = useBook();
@@ -14,6 +24,11 @@ export default function MainBookingForm() {
 
   const [success, setSuccess] = useState(false);
   const today = new Date().toISOString().split("T")[0];
+
+  // Derive tour options: Use DB results if they exist, otherwise use Hardcoded
+  const tourOptions = tours && tours.length > 0 
+    ? tours.map((t) => t.title) 
+    : HARDCODED_TOURS;
 
   const [form, setForm] = useState({
     full_name: "",
@@ -30,9 +45,7 @@ export default function MainBookingForm() {
     children: 0,
     currency: "USD",
     notes: "",
-    // UPDATED: Default to a manual method
     payment_method: "Bank Transfer",
-    // UPDATED: Status is 'Pending' until you send the quote
     payment_status: "Pending",
     managed_status: "Pending",
     quoted_price: 0,
@@ -41,10 +54,8 @@ export default function MainBookingForm() {
 
   const handleChange = (e) => {
     const { name, value, type, inputMode } = e.target;
-
     setForm((prev) => ({
       ...prev,
-      // Handle numeric inputs for both standard number types and mobile numeric pads
       [name]:
         type === "number" || inputMode === "numeric"
           ? parseInt(value) || 0
@@ -54,7 +65,6 @@ export default function MainBookingForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const toSQL = (date) => (date ? date.split("T")[0] : null);
 
     const payload = {
@@ -63,7 +73,6 @@ export default function MainBookingForm() {
       travel_end_date: toSQL(form.travel_end_date),
       adults: Number(form.adults),
       children: Number(form.children),
-      // Crucial fix: Trim whitespace and ensure notes are sent as a clean string
       notes: form.notes?.trim() || "",
       user_id: form.user_id || null,
     };
@@ -72,7 +81,6 @@ export default function MainBookingForm() {
 
     if (res) {
       setSuccess(true);
-
       setTimeout(() => {
         document
           .getElementById("booking-success")
@@ -86,13 +94,10 @@ export default function MainBookingForm() {
   };
 
   // Styles
-  const inputStyle =
-    "w-full border border-[var(--color-dark-muted)] rounded-xl p-3 bg-white text-[#442c23] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]";
+  const inputStyle = "w-full border border-[var(--color-dark-muted)] rounded-xl p-3 bg-white text-[#442c23] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]";
   const labelStyle = "text-sm font-semibold text-[#442c23] mb-1";
-
   const radioItemStyle = "flex items-center gap-3 cursor-pointer group";
-  const radioCircleStyle =
-    "w-5 h-5 rounded-full border-2 border-[#442c23] flex items-center justify-center transition-all group-hover:border-[#8b5e3c]";
+  const radioCircleStyle = "w-5 h-5 rounded-full border-2 border-[#442c23] flex items-center justify-center transition-all group-hover:border-[#8b5e3c]";
   const radioActiveStyle = "w-2.5 h-2.5 rounded-full bg-[#442c23]";
 
   return (
@@ -107,10 +112,7 @@ export default function MainBookingForm() {
       <div className="col-span-1 md:col-span-2 w-24 h-1 bg-(--color-secondary) mx-auto rounded-full mb-4" />
 
       {success && (
-        <div
-          id="booking-success"
-          className="col-span-1 md:col-span-2 bg-green-100 text-[#442c23] p-4 rounded-xl text-center font-semibold"
-        >
+        <div id="booking-success" className="col-span-1 md:col-span-2 bg-green-100 text-[#442c23] p-4 rounded-xl text-center font-semibold">
           Booking Successful! Redirecting...
         </div>
       )}
@@ -118,43 +120,24 @@ export default function MainBookingForm() {
       {/* Passenger Info */}
       <div className="col-span-1 md:col-span-2 flex flex-col">
         <label className={labelStyle}>Name</label>
-        <input
-          name="full_name"
-          required
-          value={form.full_name}
-          onChange={handleChange}
-          className={inputStyle}
-        />
+        <input name="full_name" required value={form.full_name} onChange={handleChange} className={inputStyle} />
       </div>
 
       <div className="col-span-1 md:col-span-1 flex flex-col">
         <label className={labelStyle}>Email</label>
-        <input
-          type="email"
-          name="email"
-          required
-          value={form.email}
-          onChange={handleChange}
-          className={inputStyle}
-        />
+        <input type="email" name="email" required value={form.email} onChange={handleChange} className={inputStyle} />
       </div>
 
       <div className="col-span-1 md:col-span-1 flex flex-col">
         <label className={labelStyle}>Phone</label>
-        <input
-          name="phone"
-          required
-          value={form.phone}
-          onChange={handleChange}
-          className={inputStyle}
-        />
+        <input name="phone" required value={form.phone} onChange={handleChange} className={inputStyle} />
       </div>
 
-      {/* Tour Selection */}
+      {/* Tour Selection - NOW USING HARDCODED FALLBACK */}
       <div className="col-span-1 md:col-span-2 text-[#442c23]">
         <SelectMenu
           label="Select Tour Package"
-          options={tours?.map((t) => t.title) || []}
+          options={tourOptions}
           value={form.tour_package}
           onChange={(val) => setForm({ ...form, tour_package: val })}
         />
@@ -165,30 +148,16 @@ export default function MainBookingForm() {
         <label className={labelStyle}>Preferred Payment Method</label>
         <div className="flex flex-wrap gap-4 md:gap-8 p-4 border border-(--color-dark-muted) rounded-xl bg-white">
           {[
-            { label: "Bank Transfer", value: "Bank Transfer" }, // Changed from Stripe
+            { label: "Bank Transfer", value: "Bank Transfer" },
             { label: "M-Pesa", value: "M-Pesa" },
-            { label: "Cash", value: "Cash" }, // Added Cash option
+            { label: "Cash", value: "Cash" },
           ].map((method) => (
-            <label
-              key={method.value}
-              className={`${radioItemStyle} flex items-center cursor-pointer`}
-            >
-              <input
-                type="radio"
-                name="payment_method"
-                value={method.value}
-                checked={form.payment_method === method.value}
-                onChange={handleChange}
-                className="hidden"
-              />
+            <label key={method.value} className={`${radioItemStyle} flex items-center cursor-pointer`}>
+              <input type="radio" name="payment_method" value={method.value} checked={form.payment_method === method.value} onChange={handleChange} className="hidden" />
               <div className={radioCircleStyle}>
-                {form.payment_method === method.value && (
-                  <div className={radioActiveStyle} />
-                )}
+                {form.payment_method === method.value && <div className={radioActiveStyle} />}
               </div>
-              <span className="ml-2 font-medium text-[#2d1b0b]">
-                {method.label}
-              </span>
+              <span className="ml-2 font-medium text-[#2d1b0b]">{method.label}</span>
             </label>
           ))}
         </div>
@@ -199,18 +168,8 @@ export default function MainBookingForm() {
         <label className={labelStyle}>Flight Type</label>
         <div className="flex flex-wrap gap-3">
           {["None", "Domestic Flight", "International Flight"].map((type) => (
-            <label
-              key={type}
-              className="flex items-center gap-2 cursor-pointer text-[#442c23]"
-            >
-              <input
-                type="radio"
-                name="flight_type"
-                value={type}
-                checked={form.flight_type === type}
-                onChange={handleChange}
-                className="hidden peer"
-              />
+            <label key={type} className="flex items-center gap-2 cursor-pointer text-[#442c23]">
+              <input type="radio" name="flight_type" value={type} checked={form.flight_type === type} onChange={handleChange} className="hidden peer" />
               <div className="w-5 h-5 rounded-full border-2 border-(--color-dark-muted) peer-checked:border-(--color-primary) peer-checked:bg-(--color-primary) transition shrink-0" />
               <span className="text-xs font-medium">{type}</span>
             </label>
@@ -218,29 +177,15 @@ export default function MainBookingForm() {
         </div>
       </div>
 
-      {/* Conditional Cities - Only shows if flight is not "None" */}
       {form.flight_type !== "None" && (
         <>
           <div className="col-span-1 md:col-span-1 flex flex-col">
             <label className={labelStyle}>Departure City</label>
-            <input
-              name="departure_city"
-              placeholder="City or Airport"
-              value={form.departure_city}
-              onChange={handleChange}
-              className={inputStyle}
-            />
+            <input name="departure_city" placeholder="City or Airport" value={form.departure_city} onChange={handleChange} className={inputStyle} />
           </div>
-
           <div className="col-span-1 md:col-span-1 flex flex-col">
             <label className={labelStyle}>Arrival City</label>
-            <input
-              name="arrival_city"
-              placeholder="City or Airport"
-              value={form.arrival_city}
-              onChange={handleChange}
-              className={inputStyle}
-            />
+            <input name="arrival_city" placeholder="City or Airport" value={form.arrival_city} onChange={handleChange} className={inputStyle} />
           </div>
         </>
       )}
@@ -263,9 +208,7 @@ export default function MainBookingForm() {
             startDate={form.travel_start_date}
             endDate={form.travel_end_date}
             minDate={today}
-            onChange={(s, e) =>
-              setForm({ ...form, travel_start_date: s, travel_end_date: e })
-            }
+            onChange={(s, e) => setForm({ ...form, travel_start_date: s, travel_end_date: e })}
           />
         </div>
       </div>
@@ -273,30 +216,12 @@ export default function MainBookingForm() {
       {/* Travelers */}
       <div className="col-span-1 md:col-span-1 flex flex-col">
         <label className={labelStyle}>Adults</label>
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          name="adults"
-          min="1"
-          value={form.adults}
-          onChange={handleChange}
-          className={inputStyle}
-        />
+        <input type="text" inputMode="numeric" pattern="[0-9]*" name="adults" min="1" value={form.adults} onChange={handleChange} className={inputStyle} />
       </div>
 
       <div className="col-span-1 md:col-span-1 flex flex-col">
         <label className={labelStyle}>Children</label>
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          name="children"
-          min="0"
-          value={form.children}
-          onChange={handleChange}
-          className={inputStyle}
-        />
+        <input type="text" inputMode="numeric" pattern="[0-9]*" name="children" min="0" value={form.children} onChange={handleChange} className={inputStyle} />
       </div>
 
       {/* Currency */}
@@ -309,24 +234,14 @@ export default function MainBookingForm() {
         />
       </div>
 
-      {/* Notes / Special Requests */}
+      {/* Notes */}
       <div className="col-span-1 md:col-span-2 flex flex-col">
         <label className={labelStyle}>Special Requests</label>
-        <textarea
-          name="notes"
-          value={form.notes}
-          onChange={handleChange}
-          className={`${inputStyle} h-24`}
-          placeholder="Dietary requirements, accessibility needs, etc..."
-        />
+        <textarea name="notes" value={form.notes} onChange={handleChange} className={`${inputStyle} h-24`} placeholder="Dietary requirements, accessibility needs, etc..." />
       </div>
 
       {/* Submit */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="col-span-1 md:col-span-2 bg-[#442c23] text-white font-heading py-4 rounded-xl hover:opacity-90 transition text-lg mt-4 shadow-lg disabled:bg-gray-400"
-      >
+      <button type="submit" disabled={loading} className="col-span-1 md:col-span-2 bg-[#442c23] text-white font-heading py-4 rounded-xl hover:opacity-90 transition text-lg mt-4 shadow-lg disabled:bg-gray-400">
         {loading ? "Submitting..." : "Submit Booking"}
       </button>
     </form>
