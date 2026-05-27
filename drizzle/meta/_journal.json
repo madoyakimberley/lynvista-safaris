@@ -8,6 +8,13 @@
       "when": 1773226578667,
       "tag": "0000_outstanding_jimmy_woo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1779917288943,
+      "tag": "0001_premium_nighthawk",
+      "breakpoints": true
     }
   ]
 }

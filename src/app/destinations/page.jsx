@@ -4,18 +4,16 @@ import { useState, useEffect } from "react";
 import { Search, Calendar, MapPin, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import Skeleton from "../_components/Skeleton/page";
+import Skeleton from "./Skeleton.jsx";
 
 export default function DestinationsPage() {
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // FALLBACK: If the image is cached, onLoadingComplete might not fire.
-  // This ensures the skeleton hides regardless after a short delay.
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
-    }, 2000); // 2-second safety fallback
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -85,14 +83,12 @@ export default function DestinationsPage() {
 
   return (
     <div className="min-h-screen bg-(--color-light) relative">
-      {/* 1. FULL PAGE SKELETON (Visible until image loads or timeout) */}
       {!isLoaded && (
         <div className="fixed inset-0 z-50 bg-white">
           <Skeleton />
         </div>
       )}
 
-      {/* 2. THE ACTUAL CONTENT */}
       <div
         className={`transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}
       >
@@ -102,10 +98,11 @@ export default function DestinationsPage() {
             src="/images/tourdest.WebP"
             alt="Destinations Hero"
             fill
+            sizes="100vw"
             className="object-cover"
             onLoadingComplete={() => setIsLoaded(true)}
             priority
-            unoptimized={process.env.NODE_ENV === "development"} // Helps with local build testing
+            unoptimized={process.env.NODE_ENV === "development"}
           />
           <div className="absolute inset-0 bg-black/40 z-0"></div>
 
@@ -217,6 +214,7 @@ export default function DestinationsPage() {
                     src={dest.image}
                     alt={dest.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                     priority={index < 3}
                   />
@@ -275,6 +273,7 @@ export default function DestinationsPage() {
                     src={selectedDestination.image}
                     alt={selectedDestination.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, 672px"
                     className="object-cover"
                     priority
                   />

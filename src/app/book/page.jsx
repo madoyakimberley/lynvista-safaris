@@ -2,35 +2,38 @@
 
 import { useState, useEffect } from "react";
 import MainBookingForm from "./_components/forms/main-booking-form";
-import Skeleton from "../_components/Skeleton/page";
+import Skeleton from "./Skeleton";
 
 export default function BookingPage() {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [tours, setTours] = useState([]);
 
   useEffect(() => {
-    // Small timeout to allow the background CSS and form components to mount
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 500);
-    return () => clearTimeout(timer);
+    async function fetchData() {
+      try {
+        // This hits your Next.js API route
+        const response = await fetch("/api/tours");
+        const data = await response.json();
+        setTours(data);
+      } catch (error) {
+        console.error("Failed to fetch tours:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
   }, []);
 
-  return (
-    <div className="min-h-screen relative">
-      {/* 1. FULL PAGE SKELETON */}
-      {!isLoaded && (
-        <div className="fixed inset-0 z-50 bg-white">
-          <Skeleton />
-        </div>
-      )}
+  if (isLoading) {
+    return <Skeleton />;
+  }
 
-      {/* 2. THE ACTUAL CONTENT */}
-      <div
-        className={`transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"} booking-bg min-h-screen flex items-center justify-center p-10`}
-      >
-        <div className="booking-card">
-          <MainBookingForm />
-        </div>
+  return (
+    <div className="booking-bg min-h-screen flex items-center justify-center p-10">
+      <div className="booking-card">
+        {/* Pass the fetched tours down to your form */}
+        <MainBookingForm tours={tours} />
       </div>
     </div>
   );

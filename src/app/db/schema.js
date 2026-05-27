@@ -33,6 +33,8 @@ export const tours = mysqlTable("tours", {
   base_price: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
   duration: varchar("duration", { length: 50 }).notNull(),
   location: varchar("location", { length: 100 }).notNull(),
+  // ADD THIS LINE TO MATCH YOUR DB
+  image: varchar("image", { length: 255 }),
   created_at: timestamp("created_at").defaultNow(),
 });
 
