@@ -3,6 +3,9 @@ import { bookings } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
 import PaymentCards from "../_components/tables/payment-cards";
 
+// Force Next.js to skip static generation and render this dynamically on request
+export const dynamic = "force-dynamic";
+
 export default async function PaymentsPage() {
   const data = await db
     .select()

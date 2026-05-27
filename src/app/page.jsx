@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 import BodyWrapper from "./_components/wrappers/BodyWrapper";
@@ -9,17 +10,26 @@ export default function HomePage() {
   return (
     <AOSWrapper>
       <BodyWrapper>
-        <section
-          className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('/images/homepage.WebP')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
-          <div className="max-w-md mx-auto space-y-8" data-aos="fade-up">
+        <section className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+          {/* 1. Base Layer: The Background Image (No negative z-index) */}
+          <Image
+            src="/images/homepage.WebP"
+            alt="Lynvista Safaris Kenya"
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+            quality={85}
+          />
+
+          {/* 2. Middle Layer: The Dark Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/50" />
+
+          {/* 3. Top Layer: Your Content (Brought to the front with relative z-10) */}
+          <div
+            className="relative z-10 max-w-md mx-auto space-y-8"
+            data-aos="fade-up"
+          >
             <h1
               className="text-6xl md:text-7xl font-black leading-tight tracking-tight text-(--color-text-gold)"
               style={{ fontFamily: "var(--font-heading)", fontWeight: 900 }}
