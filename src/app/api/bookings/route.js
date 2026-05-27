@@ -50,15 +50,17 @@ export async function POST(req) {
         body.accommodation_type === "None"
           ? null
           : body.accommodation_type || null,
-      checkin_date: body.checkin_date || null,
-      checkout_date: body.checkout_date || null,
+      // Use the new columns added to your table
       travel_start_date: body.travel_start_date || null,
       travel_end_date: body.travel_end_date || null,
+      // Passenger counts
       adults: parseInt(body.adults) || 1,
       children: parseInt(body.children) || 0,
+      // Other fields
       quoted_price: body.quoted_price ? String(body.quoted_price) : "0.00",
       notes: body.notes || null,
       payment_reference: body.payment_reference || null,
+      // Defaults
       managed_status: "Pending",
       payment_status: "Pending",
     };

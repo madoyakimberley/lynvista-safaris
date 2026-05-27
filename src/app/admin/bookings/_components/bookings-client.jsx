@@ -34,7 +34,6 @@ export default function BookingsClient({ initialBookings }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
 
-  // --- FIX: Define totalAmount here so it's accessible everywhere ---
   const totalAmount = quoteItems.reduce(
     (sum, i) => sum + (Number(i.price) || 0),
     0,
@@ -53,6 +52,33 @@ export default function BookingsClient({ initialBookings }) {
   useEffect(() => {
     refresh();
   }, []);
+
+  const deleteBooking = async (id) => {
+    if (!confirm("Are you sure you want to delete this booking?")) return;
+    try {
+      const res = await fetch(`/api/admin/bookings?id=${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) refresh();
+      else alert("Failed to delete booking.");
+    } catch (err) {
+      alert("Error connecting to server.");
+    }
+  };
+
+  const markPaid = async (id) => {
+    try {
+      const res = await fetch("/api/admin/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mark-paid", id }),
+      });
+      if (res.ok) refresh();
+      else alert("Failed to mark as paid.");
+    } catch (err) {
+      alert("Error connecting to server.");
+    }
+  };
 
   const openQuoteModal = (booking) => {
     setSelectedBooking(booking);
@@ -74,7 +100,7 @@ export default function BookingsClient({ initialBookings }) {
         body: JSON.stringify({
           action: "quote",
           id: selectedBooking.id,
-          quoted_price: totalAmount, // Now using the top-level variable
+          quoted_price: totalAmount,
           items: quoteItems,
           email: selectedBooking.email,
           full_name: selectedBooking.full_name,
@@ -138,7 +164,12 @@ export default function BookingsClient({ initialBookings }) {
         </select>
       </div>
 
-      <BookingsTable bookings={filtered} sendPaymentLink={openQuoteModal} />
+      <BookingsTable
+        bookings={filtered}
+        sendPaymentLink={openQuoteModal}
+        markPaid={markPaid}
+        deleteBooking={deleteBooking}
+      />
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#2d1b0b]/60 backdrop-blur-sm flex items-center justify-center p-4">

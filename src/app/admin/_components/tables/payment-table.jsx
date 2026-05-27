@@ -2,74 +2,48 @@
 
 import { Check, X } from "lucide-react";
 
-export default function PaymentTable({ bookings, refresh }) {
-  const updateStatus = async (id, status) => {
-    // Update status
-    await fetch("/api/admin/bookings/update", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id, status }),
-    });
-
-    // Optional: trigger receipt generation
-    await fetch("/api/admin/bookings/receipt", {
+export default function PaymentTable({ bookings }) {
+  const updatePaymentStatus = async (id, status) => {
+    await fetch("/api/admin/bookings", {
       method: "POST",
-      body: JSON.stringify({ bookingId: id }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update-payment",
+        id,
+        payment_status: status,
+      }),
     });
-
-    // ✅ Safe reload
     window.location.reload();
   };
 
-  // ===================== STYLES =====================
   return (
-    <div className="p-6 rounded-xl shadow" style={{ background: "white" }}>
-      <h2
-        className="text-xl font-heading mb-6"
-        style={{ color: "var(--color-dark)" }}
-      >
-        Payments
-      </h2>
-
+    <div className="p-6 rounded-xl shadow bg-white">
+      <h2 className="text-xl font-bold mb-6">Payment Status</h2>
       <table className="w-full text-left">
         <thead>
-          <tr style={{ borderBottom: "1px solid #eee" }}>
-            <th>Name</th>
-            <th>Tour</th>
-            <th>Travelers</th>
-            <th>Status</th>
-            <th>Action</th>
+          <tr className="border-b border-gray-100">
+            <th className="py-2">Name</th>
+            <th className="py-2">Tour</th>
+            <th className="py-2">Status</th>
+            <th className="py-2">Action</th>
           </tr>
         </thead>
-
         <tbody>
           {bookings.map((b) => (
             <tr key={b.id} className="border-b">
-              <td>{b.full_name}</td>
-              <td>{b.tour_package}</td>
-              <td>{b.travelers}</td>
-              <td>{b.payment_status}</td>
-              <td className="flex gap-3 py-3">
+              <td className="py-3">{b.full_name}</td>
+              <td className="py-3">{b.tour_package}</td>
+              <td className="py-3 font-semibold">{b.payment_status}</td>
+              <td className="flex gap-2 py-3">
                 <button
-                  onClick={() => updateStatus(b.id, "Paid")}
-                  className="p-2 rounded"
-                  style={{
-                    background: "var(--color-primary)",
-                    color: "white",
-                  }}
+                  onClick={() => updatePaymentStatus(b.id, "Paid")}
+                  className="p-2 rounded bg-green-600 text-white"
                 >
                   <Check size={16} />
                 </button>
-
                 <button
-                  onClick={() => updateStatus(b.id, "Cancelled")}
-                  className="p-2 rounded"
-                  style={{
-                    background: "#dc2626",
-                    color: "white",
-                  }}
+                  onClick={() => updatePaymentStatus(b.id, "Cancelled")}
+                  className="p-2 rounded bg-red-600 text-white"
                 >
                   <X size={16} />
                 </button>

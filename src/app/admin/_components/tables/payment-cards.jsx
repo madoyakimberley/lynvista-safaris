@@ -1,65 +1,29 @@
 "use client";
 
 export default function PaymentCards({ bookings }) {
-  const pending = bookings.filter((b) => b.managed_status === "Pending");
+  const pending = bookings.filter((b) => b.managed_status !== "Managed");
   const managed = bookings.filter((b) => b.managed_status === "Managed");
 
-  // ===================== UPDATE STATUS =====================
+  // ===================== API ACTIONS =====================
   const toggleStatus = async (id, newStatus) => {
     await fetch("/api/admin/bookings", {
-      method: "PUT", // <-- changed PATCH to PUT
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, managed_status: newStatus }),
+      body: JSON.stringify({
+        action: "update-status",
+        id,
+        managed_status: newStatus,
+      }),
     });
     window.location.reload();
   };
 
-  // ===================== DELETE INDIVIDUAL =====================
   const deleteBooking = async (id) => {
     if (!confirm("Are you sure you want to delete this booking?")) return;
-    await fetch("/api/admin/bookings", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
+    await fetch(`/api/admin/bookings?id=${id}`, { method: "DELETE" });
     window.location.reload();
   };
 
-  // ===================== CLEAR ALL MANAGED =====================
-  const clearAllManaged = async () => {
-    if (!confirm("Are you sure you want to delete ALL managed bookings?"))
-      return;
-    for (const b of managed) {
-      await fetch("/api/admin/bookings", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: b.id }),
-      });
-    }
-    window.location.reload();
-  };
-
-  // ===================== PAYSTACK PAYMENT (Admin) =====================
-  const triggerPaystack = async (id) => {
-    try {
-      const res = await fetch("/api/admin/bookings/paystack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: id }),
-      });
-      const data = await res.json();
-      if (data.payment_url) {
-        window.open(data.payment_url, "_blank");
-      } else {
-        alert("Paystack initialization failed.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error connecting to Paystack.");
-    }
-  };
-
-  // ===================== STYLES =====================
   const cardStyle = "rounded-xl shadow p-6 space-y-3 border border-[#e7e3da]";
   const textDark = { color: "var(--color-dark)" };
   const textMuted = { color: "var(--color-dark-muted)" };
@@ -68,7 +32,7 @@ export default function PaymentCards({ bookings }) {
     <div className="space-y-16">
       {/* ================= PENDING ================= */}
       <div>
-        <h2 className="text-2xl font-heading font-bold mb-6" style={textDark}>
+        <h2 className="text-2xl font-bold mb-6" style={textDark}>
           Pending Management
         </h2>
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -88,11 +52,11 @@ export default function PaymentCards({ bookings }) {
                   <strong>Tour:</strong> {b.tour_package}
                 </p>
                 <p>
-                  <strong>Travelers:</strong> {b.adults} Adults, {b.children}{" "}
-                  Children
+                  <strong>Travelers:</strong> {b.adults || 0} Adults,{" "}
+                  {b.children || 0} Children
                 </p>
                 <p>
-                  <strong>Dates:</strong> {b.travel_start_date} to{" "}
+                  <strong>Dates:</strong> {b.travel_start_date} –{" "}
                   {b.travel_end_date}
                 </p>
                 <p>
@@ -101,24 +65,16 @@ export default function PaymentCards({ bookings }) {
                 <p>
                   <strong>Flight:</strong> {b.flight_type}
                 </p>
+                <p>
+                  <strong>Notes:</strong> {b.notes || "None"}
+                </p>
               </div>
-
-              {/* ================= BUTTONS ================= */}
-              <div className="flex flex-col gap-2 mt-4">
-                <button
-                  onClick={() => toggleStatus(b.id, "Managed")}
-                  className="w-full bg-green-700 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800 transition"
-                >
-                  Mark as Managed
-                </button>
-
-                <button
-                  onClick={() => triggerPaystack(b.id)}
-                  className="w-full bg-yellow-500 text-black px-4 py-2 rounded text-sm font-semibold hover:bg-yellow-600 transition"
-                >
-                  Send Paystack Payment
-                </button>
-              </div>
+              <button
+                onClick={() => toggleStatus(b.id, "Managed")}
+                className="w-full bg-green-700 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800 transition mt-2"
+              >
+                Mark as Managed
+              </button>
             </div>
           ))}
         </div>
@@ -126,19 +82,9 @@ export default function PaymentCards({ bookings }) {
 
       {/* ================= COMPLETED / MANAGED ================= */}
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-heading font-bold" style={textDark}>
-            Completed Management
-          </h2>
-          {managed.length > 0 && (
-            <button
-              onClick={clearAllManaged}
-              className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 transition"
-            >
-              Clear All
-            </button>
-          )}
-        </div>
+        <h2 className="text-2xl font-bold mb-6" style={textDark}>
+          Completed Management
+        </h2>
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
           {managed.map((b) => (
             <div key={b.id} className={`${cardStyle} bg-[#f3f2e8]`}>
@@ -150,11 +96,13 @@ export default function PaymentCards({ bookings }) {
                   <strong>Tour:</strong> {b.tour_package}
                 </p>
                 <p>
-                  <strong>Adults:</strong> {b.adults} |{" "}
-                  <strong>Children:</strong> {b.children}
+                  <strong>Status:</strong> Fully Managed
                 </p>
                 <p>
-                  <strong>Status:</strong> Fully Managed
+                  <strong>Payment Status:</strong> {b.payment_status}
+                </p>
+                <p>
+                  <strong>Admin Notes:</strong> {b.admin_notes || "None"}
                 </p>
               </div>
               <div className="flex gap-2 mt-4">
@@ -162,7 +110,7 @@ export default function PaymentCards({ bookings }) {
                   onClick={() => toggleStatus(b.id, "Pending")}
                   className="flex-1 bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600 transition"
                 >
-                  Revert to Pending
+                  Revert
                 </button>
                 <button
                   onClick={() => deleteBooking(b.id)}
