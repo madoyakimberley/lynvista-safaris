@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 import BodyWrapper from "./_components/wrappers/BodyWrapper";
@@ -10,26 +9,28 @@ export default function HomePage() {
   return (
     <AOSWrapper>
       <BodyWrapper>
-        <section className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
-          {/* 1. Base Layer: The Background Image (No negative z-index) */}
-          <Image
-            src="/images/homepage.WebP"
-            alt="Lynvista Safaris Kenya"
-            fill
-            priority
-            className="object-cover"
-            sizes="100vw"
-            quality={85}
-          />
+        {/* Hidden preloader to force the browser to fetch the image instantly */}
+        <img
+          src="/images/homepage.WebP"
+          alt="preload"
+          fetchPriority="high"
+          className="hidden"
+        />
 
-          {/* 2. Middle Layer: The Dark Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/50" />
-
-          {/* 3. Top Layer: Your Content (Brought to the front with relative z-10) */}
-          <div
-            className="relative z-10 max-w-md mx-auto space-y-8"
-            data-aos="fade-up"
-          >
+        <section
+          className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6"
+          style={{
+            /* 1. Added Golden Amber background color to eliminate the grey flash instantly */
+            backgroundColor: "#92400e",
+            backgroundImage:
+              "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('/images/homepage.WebP')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          {/* 2. Removed data-aos="fade-up" from this div so the text shows up immediately without waiting for JS */}
+          <div className="max-w-md mx-auto space-y-8">
             <h1
               className="text-6xl md:text-7xl font-black leading-tight tracking-tight text-(--color-text-gold)"
               style={{ fontFamily: "var(--font-heading)", fontWeight: 900 }}
@@ -37,7 +38,7 @@ export default function HomePage() {
               DISCOVER <br /> KENYA
             </h1>
 
-            <div className="space-y-4" data-aos="fade-up" data-aos-delay="200">
+            <div className="space-y-4">
               <h2 className="text-2xl md:text-3xl font-medium text-white leading-snug">
                 Welcome to an incredible experience
               </h2>
@@ -47,11 +48,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div
-              className="flex flex-col gap-5 w-full max-w-xs mx-auto pt-4"
-              data-aos="zoom-in"
-              data-aos-delay="400"
-            >
+            <div className="flex flex-col gap-5 w-full max-w-xs mx-auto pt-4">
               <a
                 href="/destinations"
                 className="flex items-center justify-center gap-2 py-5 px-8 bg-(--color-primary-green) text-white text-xl font-bold rounded-[40px] shadow-lg hover:scale-105 transition-all"
