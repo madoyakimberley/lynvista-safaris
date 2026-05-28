@@ -3,17 +3,18 @@
 import { useEffect, useState } from "react";
 import { UserPlus, Trash2, Shield, Clock, Loader2, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import SettingsSkeleton from "./Skeleton";
 
 export default function SettingsPage() {
   const [admins, setAdmins] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("admin");
   const [loadingId, setLoadingId] = useState(null);
   const router = useRouter();
 
-  // ✅ Improved date formatter with error catching
   const formatDate = (dateString) => {
     if (!dateString) return "Just now";
     try {
@@ -36,7 +37,6 @@ export default function SettingsPage() {
         fetch("/api/audit"),
       ]);
 
-      // 🛡️ If any request is Unauthorized, kick to login
       if (adminRes.status === 401 || logRes.status === 401) {
         return router.push("/admin/login");
       }
@@ -44,13 +44,18 @@ export default function SettingsPage() {
       const adminData = await adminRes.json();
       const logData = await logRes.json();
 
-      // ✅ Handle both array and object formats for safety
       setAdmins(Array.isArray(adminData) ? adminData : adminData.data || []);
       setLogs(Array.isArray(logData) ? logData : logData.data || []);
     } catch (err) {
       console.error("Error loading data:", err);
+    } finally {
+      setLoading(false);
     }
   }
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   async function handleLogout() {
     if (!confirm("Are you sure you want to logout?")) return;
@@ -64,10 +69,6 @@ export default function SettingsPage() {
     }
   }
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   async function addAdmin(e) {
     e.preventDefault();
     try {
@@ -80,7 +81,7 @@ export default function SettingsPage() {
       if (res.ok) {
         setEmail("");
         setPassword("");
-        loadData(); // Refresh both lists to show the new audit log
+        loadData();
       } else {
         const err = await res.json();
         alert(err.message || "Failed to create admin");
@@ -120,6 +121,8 @@ export default function SettingsPage() {
       alert("Failed to clear logs.");
     }
   }
+
+  if (loading) return <SettingsSkeleton />;
 
   return (
     <div

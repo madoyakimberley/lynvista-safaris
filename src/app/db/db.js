@@ -4,18 +4,26 @@ import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
 
-const poolConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE || "lynvista",
-  port: Number(process.env.DB_PORT) || 4000,
-  ssl: {
-    rejectUnauthorized: true,
-  },
-  waitForConnections: true,
-  connectionLimit: 10,
-};
+// 1. Create a global cache to ensure the pool is not recreated on HMR
+const globalForDb = global;
 
-const pool = mysql.createPool(poolConfig);
-export const db = drizzle(pool);
+if (!globalForDb.pool) {
+  globalForDb.pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE || "lynvista",
+    port: Number(process.env.DB_PORT) || 4000,
+    ssl: {
+      rejectUnauthorized: true,
+    },
+    // 🛡️ CRITICAL: Keep connection alive and handle timeouts
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
+  });
+}
+
+export const db = drizzle(globalForDb.pool);
