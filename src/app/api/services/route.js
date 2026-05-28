@@ -5,26 +5,34 @@ import jwt from "jsonwebtoken";
 import { eq, desc } from "drizzle-orm";
 
 /* =====================================================
-   HELPER: GET TOKEN (Cookie OR Header)
+   HELPER: GET TOKEN
 ===================================================== */
 function getToken(req) {
   const cookieToken = req.cookies.get("admin_token")?.value;
-
   const authHeader = req.headers.get("authorization");
   const headerToken = authHeader?.startsWith("Bearer ")
     ? authHeader.split(" ")[1]
     : null;
-
   return cookieToken || headerToken;
 }
 
 /* =====================================================
-   GET ALL SERVICES
+   GET ALL SERVICES (Publicly accessible)
+   Updated to filter by 'is_active' so you can toggle visibility
 ===================================================== */
-export async function GET() {
+export async function GET(req) {
   try {
-    const data = await db.select().from(services).orderBy(desc(services.id));
+    const { searchParams } = new URL(req.url);
+    const includeInactive = searchParams.get("includeInactive") === "true";
 
+    let query = db.select().from(services).orderBy(desc(services.id));
+
+    // If not specifically requesting inactive, only return active ones
+    if (!includeInactive) {
+      query = query.where(eq(services.is_active, 1));
+    }
+
+    const data = await query;
     return NextResponse.json(data);
   } catch (error) {
     console.error("GET SERVICES ERROR:", error);
@@ -41,23 +49,16 @@ export async function GET() {
 export async function POST(req) {
   try {
     const token = getToken(req);
-
-    if (!token) {
+    if (!token)
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     if (decoded.role !== "super_admin") {
-      return NextResponse.json(
-        { message: "Only super admin can create services" },
-        { status: 403 },
-      );
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const body = await req.json();
 
-    // 🔥 VALIDATION
     if (!body.name || !body.icon_name) {
       return NextResponse.json(
         { message: "Name and icon are required" },
@@ -74,7 +75,7 @@ export async function POST(req) {
 
     await db.insert(auditLogs).values({
       admin_id: decoded.id,
-      action: `Created service ${body.name}`,
+      action: `Created service: ${body.name}`,
     });
 
     return NextResponse.json({
@@ -96,37 +97,24 @@ export async function POST(req) {
 export async function DELETE(req) {
   try {
     const token = getToken(req);
-
-    if (!token) {
+    if (!token)
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     if (decoded.role !== "super_admin") {
-      return NextResponse.json(
-        { message: "Only super admin can delete services" },
-        { status: 403 },
-      );
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    let id;
-
-    // ✅ Support BOTH query + body
     const { searchParams } = new URL(req.url);
-    id = searchParams.get("id");
+    let id = searchParams.get("id");
 
     if (!id) {
       const body = await req.json();
       id = body.id;
     }
 
-    if (!id) {
-      return NextResponse.json(
-        { message: "Service ID is required" },
-        { status: 400 },
-      );
-    }
+    if (!id)
+      return NextResponse.json({ message: "ID required" }, { status: 400 });
 
     await db.delete(services).where(eq(services.id, Number(id)));
 
@@ -135,9 +123,7 @@ export async function DELETE(req) {
       action: `Deleted service ID ${id}`,
     });
 
-    return NextResponse.json({
-      message: "Service deleted successfully",
-    });
+    return NextResponse.json({ message: "Service deleted successfully" });
   } catch (error) {
     console.error("DELETE SERVICE ERROR:", error);
     return NextResponse.json(

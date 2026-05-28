@@ -1,323 +1,286 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Calendar, MapPin, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import Skeleton from "./Skeleton.jsx";
 
 export default function DestinationsPage() {
+  const [destinations, setDestinations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedDestination, setSelectedDestination] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 2000);
-    return () => clearTimeout(timer);
+    async function fetchDestinations() {
+      try {
+        const res = await fetch("/api/tours");
+        const data = await res.json();
+        setDestinations(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching destinations:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDestinations();
   }, []);
 
-  const destinations = [
-    {
-      id: 1,
-      title: "Safari Packages",
-      description:
-        "Explore Kenya’s top safari destinations: Maasai Mara, Amboseli, Tsavo, Samburu, Lake Nakuru, etc.",
-      base_price: 500,
-      duration: "3 Days",
-      location: "Kenya",
-      image: "/images/dest1.WebP",
-    },
-    {
-      id: 2,
-      title: "Cultural & Community Tours",
-      description: "Immerse in local culture and communities across Kenya.",
-      base_price: 300,
-      duration: "2 Days",
-      location: "Kenya",
-      image: "/images/dest2.WebP",
-    },
-    {
-      id: 3,
-      title: "Group Tours & Excursions",
-      description: "Perfect for friends, families, or corporate groups.",
-      base_price: 400,
-      duration: "2-5 Days",
-      location: "Kenya",
-      image: "/images/dest3.WebP",
-    },
-    {
-      id: 4,
-      title: "Domestic Tours & Weekend Getaways",
-      description: "Quick escapes and domestic trips around Kenya.",
-      base_price: 200,
-      duration: "1-2 Days",
-      location: "Kenya",
-      image: "/images/dest4.WebP",
-    },
-    {
-      id: 5,
-      title: "International Holiday Packages",
-      description: "Travel beyond Kenya with curated international packages.",
-      base_price: 1000,
-      duration: "5-10 Days",
-      location: "Various",
-      image: "/images/dest5.WebP",
-    },
-    {
-      id: 6,
-      title: "Student Travel & Educational Tours",
-      description:
-        "Educational trips and guided learning experiences for students.",
-      base_price: 250,
-      duration: "2-7 Days",
-      location: "Kenya",
-      image: "/images/dest6.WebP",
-    },
+  if (loading) return <Skeleton />;
+
+  // The 6-step repeating pattern for the masonry grid
+  const masonryPattern = [
+    "md:col-span-6 md:row-span-2",
+    "md:col-span-6 md:row-span-1",
+    "md:col-span-4 md:row-span-1",
+    "md:col-span-8 md:row-span-1",
+    "md:col-span-5 md:row-span-2",
+    "md:col-span-7 md:row-span-2",
   ];
 
-  const fadeUp = {
-    hidden: { opacity: 0, y: 40 },
-    show: { opacity: 1, y: 0 },
-  };
-
   return (
-    <div className="min-h-screen bg-(--color-light) relative">
-      {!isLoaded && (
-        <div className="fixed inset-0 z-50 bg-white">
-          <Skeleton />
-        </div>
-      )}
-
-      <div
-        className={`transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}
-      >
-        {/* HERO SECTION */}
-        <div className="relative h-150 flex flex-col items-center justify-center text-center px-6">
+    <div className="bg-[#FAF9F4] min-h-screen text-[#3A2E26] font-sans selection:bg-[#c19b6c] selection:text-white overflow-x-hidden">
+      {/* 1. HERO SECTION */}
+      <div className="relative h-[550px] w-full flex items-center justify-start overflow-hidden">
+        <div className="absolute inset-0">
           <Image
             src="/images/tourdest.WebP"
-            alt="Destinations Hero"
+            alt="Curated Destinations Hero"
             fill
-            sizes="100vw"
-            className="object-cover"
-            onLoadingComplete={() => setIsLoaded(true)}
             priority
-            unoptimized={process.env.NODE_ENV === "development"}
+            className="object-cover brightness-90"
+            sizes="100vw"
           />
-          <div className="absolute inset-0 bg-black/40 z-0"></div>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
 
-          <motion.div
-            initial="hidden"
-            animate={isLoaded ? "show" : "hidden"}
-            variants={fadeUp}
-            transition={{ duration: 0.8 }}
-            className="z-10"
-          >
-            <h1
-              className="text-6xl md:text-8xl font-black text-(--color-text-gold) mb-4 tracking-tighter drop-shadow-2xl"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              Your Dream Vacation Awaits
-            </h1>
-            <p className="text-xl md:text-2xl text-white/95 italic font-heading">
-              Explore the World with us.
-            </p>
-          </motion.div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-left">
+          <p className="uppercase tracking-[0.3em] text-[11px] font-bold text-[#e9bc47] mb-3">
+            Iconic Kenyan Wonders
+          </p>
+          <h1 className="text-5xl md:text-7xl font-serif font-bold text-white tracking-wide leading-none">
+            Curated Destinations
+          </h1>
+          <p className="mt-6 text-base md:text-lg max-w-xl text-white/90 leading-relaxed font-medium drop-shadow-sm">
+            From the rolling plains of the Mara to the crystalline waters of
+            Diani, explore the diverse landscapes that define the heart of
+            Africa.
+          </p>
+        </div>
+      </div>
 
-          {/* FLOATING SEARCH BAR */}
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="absolute -bottom-10 w-full max-w-5xl px-4 z-20"
-          >
-            <div className="bg-white p-6 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-              <div className="flex items-center gap-3 border-r border-gray-100 px-4">
-                <MapPin className="text-(--color-secondary-orange)" size={22} />
-                <div className="text-left">
-                  <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest">
-                    Location
-                  </p>
-                  <p className="text-sm font-bold text-(--color-dark)">
-                    Where to?
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 border-r border-gray-100 px-4">
-                <Calendar
-                  className="text-(--color-secondary-orange)"
-                  size={22}
-                />
-                <div className="text-left">
-                  <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest">
-                    Date
-                  </p>
-                  <p className="text-sm font-bold text-(--color-dark)">
-                    Select Date
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 border-r border-gray-100 px-4">
-                <Clock className="text-(--color-secondary-orange)" size={22} />
-                <div className="text-left">
-                  <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest">
-                    Duration
-                  </p>
-                  <p className="text-sm font-bold text-(--color-dark)">
-                    Any Length
-                  </p>
-                </div>
-              </div>
-              <a href="/book" className="w-full">
-                <button className="w-full bg-(--color-primary-green) hover:bg-(--color-primary) text-white font-black py-4 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg">
-                  <Search size={20} strokeWidth={3} />
-                  BOOK NOW
-                </button>
-              </a>
-            </div>
-          </motion.div>
+      {/* 2. MASONRY GRID SECTION */}
+      <div className="max-w-7xl mx-auto px-6 py-24">
+        <div className="mb-16 border-b border-[#3A2E26]/10 pb-8">
+          <h2 className="text-4xl font-serif font-bold text-[#4a3219] mb-2">
+            Discover Your Ideal Journey
+          </h2>
+          <p className="text-[#a48665] text-sm font-medium">
+            Explore handpicked premium travel destinations.
+          </p>
         </div>
 
-        {/* DESTINATIONS GRID */}
-        <div className="max-w-7xl mx-auto px-6 pt-36 pb-24">
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="text-center mb-20"
-          >
-            <h2
-              className="text-4xl md:text-6xl font-black text-(--color-dark) italic"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              Popular Destinations
-            </h2>
-            <div className="w-24 h-1.5 bg-(--color-secondary-orange) mx-auto mt-6 rounded-full"></div>
-          </motion.div>
+        {/* Dynamic Editorial Grid layout mapping explicitly to your dataset */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 auto-rows-[260px]">
+          {destinations.map((dest, index) => {
+            // Modulo operator ensures the pattern repeats seamlessly for infinite admin entries
+            const gridSpan = masonryPattern[index % masonryPattern.length];
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {destinations.map((dest, index) => (
+            return (
               <motion.div
                 key={dest.id}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ delay: index * 0.12 }}
-                whileHover={{ y: -12 }}
-                className="group bg-white rounded-4xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-50"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: (index % 6) * 0.05 }}
+                className={`relative group overflow-hidden rounded-xl cursor-pointer shadow-sm ${gridSpan}`}
                 onClick={() => setSelectedDestination(dest)}
               >
-                <div className="relative h-72 overflow-hidden">
-                  <Image
-                    src={dest.image}
-                    alt={dest.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    priority={index < 3}
-                  />
-                  <div className="absolute top-6 right-6 bg-(--color-secondary-orange) text-white px-5 py-1.5 rounded-full font-black text-sm shadow-xl">
-                    ${dest.base_price}
-                  </div>
-                </div>
-
-                <div className="p-8">
-                  <div className="flex items-center gap-2 text-(--color-primary-green) text-xs font-black uppercase tracking-[0.2em] mb-3">
-                    <MapPin size={14} /> {dest.location}
-                  </div>
-                  <h3
-                    className="text-2xl font-bold text-(--color-dark) mb-3 leading-tight group-hover:text-(--color-primary-green) transition-colors"
-                    style={{ fontFamily: "var(--font-heading)" }}
-                  >
+                <Image
+                  src={dest.image}
+                  alt={dest.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-8 flex flex-col justify-end">
+                  <span className="text-[#e9bc47] text-[10px] uppercase tracking-widest font-bold mb-1 opacity-90">
+                    Wildlife & Culture
+                  </span>
+                  <h3 className="text-white text-2xl font-serif font-bold mb-2">
                     {dest.title}
                   </h3>
-                  <p className="text-base text-(--color-dark-muted) line-clamp-2 leading-relaxed mb-6">
+                  <p className="text-white/80 text-xs font-medium mb-4 line-clamp-2 max-w-md">
                     {dest.description}
                   </p>
-                  <div className="flex justify-between items-center pt-6 border-t border-gray-50">
-                    <span className="flex items-center gap-2 text-sm font-bold text-gray-400">
-                      <Clock size={16} /> {dest.duration}
-                    </span>
-                    <span className="text-(--color-primary-green) font-black text-sm tracking-tighter uppercase group-hover:underline">
-                      View Itinerary →
-                    </span>
+                  <div className="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 group-hover:text-[#e9bc47] transition-colors">
+                    <span>Explore Experience</span>
+                    <span className="text-sm">→</span>
                   </div>
                 </div>
               </motion.div>
-            ))}
-          </div>
+            );
+          })}
         </div>
+      </div>
 
-        {/* PREMIUM MODAL */}
-        <AnimatePresence>
-          {selectedDestination && (
-            <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                onClick={() => setSelectedDestination(null)}
-              />
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="bg-(--color-light) rounded-[40px] overflow-hidden max-w-2xl w-full shadow-2xl relative z-10"
-                onClick={(e) => e.stopPropagation()}
+      {/* 3. COMPACT FOOTER ACTION BAR */}
+      <section className="bg-gradient-to-b from-[#FAF9F4] to-[#f5ebe2] py-20 px-6 text-center border-t border-[#3A2E26]/5">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-[#4a3219]">
+            Ready for an Unforgettable Adventure?
+          </h2>
+          <p className="mb-10 text-base text-[#64564b] max-w-xl mx-auto leading-relaxed">
+            Our travel experts are available around the clock to assist with
+            bookings, changes, emergencies, and travel guidance tailored just
+            for you.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a
+              // Using comma-separated tel: links allows mobile devices to offer a selection or dial the first number
+              href="tel:+254718108358, +254793696522"
+              className="px-8 py-3.5 bg-[#e9bc47] text-black font-bold uppercase text-xs tracking-widest rounded shadow-sm hover:bg-[#d9ab36] transition-colors flex items-center gap-3 w-full sm:w-auto justify-center"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 004.817 4.817l.773-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-1C9.716 18 2 11.284 2 3z" />
+              </svg>
+              Call: +254 718 108 358
+            </a>
+            <Link
+              href="/book"
+              className="px-8 py-3.5 border border-[#4a3219] bg-white text-[#4a3219] font-bold uppercase text-xs tracking-widest rounded hover:bg-[#4a3219] hover:text-white transition-all w-full sm:w-auto justify-center flex items-center gap-3"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
               >
-                <div className="h-64 relative">
-                  <Image
-                    src={selectedDestination.image}
-                    alt={selectedDestination.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 672px"
-                    className="object-cover"
-                    priority
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              Book a Trip
+            </Link>
+          </div>
+          <p className="mt-4 text-[10px] text-[#a48665] font-bold uppercase tracking-widest">
+            Secondary Line: +254 793 696 522
+          </p>
+        </div>
+      </section>
+
+      {/* 4. PREMIUM SPLIT MODAL */}
+      <AnimatePresence>
+        {selectedDestination && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setSelectedDestination(null)}
+            />
+
+            <motion.div
+              initial={{ scale: 0.97, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.97, opacity: 0, y: 15 }}
+              transition={{ type: "spring", damping: 25, stiffness: 180 }}
+              className="bg-white rounded-xl overflow-hidden max-w-5xl w-full shadow-2xl relative z-10 flex flex-col md:flex-row h-[90vh] md:h-[620px]"
+            >
+              {/* Dismiss button */}
+              <button
+                onClick={() => setSelectedDestination(null)}
+                className="absolute top-5 right-5 z-30 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-[#3A2E26] transition-colors shadow-sm"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
                   />
-                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent" />
-                  <h2
-                    className="absolute bottom-8 left-10 text-4xl font-black text-white italic"
-                    style={{ fontFamily: "var(--font-heading)" }}
-                  >
+                </svg>
+              </button>
+
+              {/* Left Column: Image Area */}
+              <div className="relative w-full md:w-[45%] h-64 md:h-full shrink-0">
+                <Image
+                  src={selectedDestination.image}
+                  alt={selectedDestination.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 45vw"
+                />
+              </div>
+
+              {/* Right Column: Clean Luxury Info Layout */}
+              <div className="w-full md:w-[55%] p-8 md:p-12 flex flex-col justify-between overflow-y-auto bg-white">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#a48665] mb-2">
+                    Private Journey
+                  </p>
+                  <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#4a3219] mb-4 tracking-wide">
                     {selectedDestination.title}
                   </h2>
-                </div>
-                <div className="p-10">
-                  <div className="flex gap-4 mb-8">
-                    <div className="flex-1 bg-white p-4 rounded-2xl border border-gray-100 text-center">
-                      <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">
-                        Price From
+                  <p className="text-[#64564b] text-sm md:text-[15px] leading-relaxed mb-8 font-medium">
+                    {selectedDestination.description}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-6 border-t border-[#3A2E26]/10 pt-8 mb-6">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#a48665] mb-1">
+                        Adventure Duration
                       </p>
-                      <p className="text-xl font-black text-(--color-secondary-orange)">
-                        ${selectedDestination.base_price}
+                      <p className="text-base font-bold text-[#3A2E26]">
+                        {selectedDestination.duration || "Custom Days"}
                       </p>
                     </div>
-                    <div className="flex-1 bg-white p-4 rounded-2xl border border-gray-100 text-center">
-                      <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">
-                        Timeframe
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#a48665] mb-1">
+                        Destination Hub
                       </p>
-                      <p className="text-xl font-black text-(--color-dark)">
-                        {selectedDestination.duration}
+                      <p className="text-base font-bold text-[#3A2E26]">
+                        Kenya, East Africa
                       </p>
                     </div>
                   </div>
-                  <p className="text-lg text-(--color-dark-muted) leading-relaxed mb-10 italic">
-                    "{selectedDestination.description}"
-                  </p>
-                  <a href="/book" className="block w-full">
-                    <button className="w-full bg-(--color-primary-green) text-white py-5 rounded-3xl font-black text-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
-                      Book Now
-                    </button>
-                  </a>
                 </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </div>
+
+                <div className="border-t border-[#3A2E26]/10 pt-6 flex items-center justify-between mt-auto">
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-[#a48665]">
+                      Starting From
+                    </p>
+                    <p className="text-xl font-serif font-bold text-[#4a3219]">
+                      ${selectedDestination.base_price || "1,250"}{" "}
+                      <span className="text-xs font-sans text-[#64564b] font-medium">
+                        / person
+                      </span>
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/book"
+                    className="px-6 py-3 bg-[#5c4021] text-white font-bold uppercase text-xs tracking-widest rounded shadow-md hover:bg-[#4a3219] transition-all flex items-center gap-3"
+                  >
+                    <span>Book This Adventure</span>
+                    <span>→</span>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
