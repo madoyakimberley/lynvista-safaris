@@ -8,12 +8,14 @@ import {
   Calendar,
   Settings,
   LogOut,
-  Package,
   DollarSign,
   ChevronLeft,
   ChevronRight,
+  FileText, // For Blog Control
+  MessageSquare, // For Inquiries
+  Briefcase, // For Services
+  Map, // For Tours
 } from "lucide-react";
-
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -21,7 +23,10 @@ export default function AdminLayout({ children }) {
   const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Bookings", href: "/admin/bookings", icon: Calendar },
-   
+    { name: "Tours", href: "/admin/tours", icon: Map },
+    { name: "Services", href: "/admin/services", icon: Briefcase },
+    { name: "Blog Control", href: "/admin/blog_control", icon: FileText },
+    { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
     { name: "Payments", href: "/admin/payments", icon: DollarSign },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];

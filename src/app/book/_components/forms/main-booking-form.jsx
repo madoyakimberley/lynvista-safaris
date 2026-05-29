@@ -122,7 +122,7 @@ function ProgressBar({ step }) {
                       style={{
                         fontSize: "12px",
                         fontWeight: "700",
-                        fontFamily: "Georgia, serif",
+                        fontFamily: "'Playfair Display', serif",
                       }}
                     >
                       {index + 1}
@@ -134,7 +134,7 @@ function ProgressBar({ step }) {
                   style={{
                     fontSize: "11px",
                     color: completed || active ? C.dark : "rgba(36,21,13,0.45)",
-                    fontFamily: "Georgia, serif",
+                    fontFamily: "'Playfair Display', serif",
                     fontWeight: completed || active ? "700" : "500",
                     letterSpacing: "0.04em",
                     textAlign: "center",
@@ -223,7 +223,7 @@ function TripSummary({ form }) {
             textTransform: "uppercase",
             letterSpacing: "0.08em",
             marginBottom: "4px",
-            fontFamily: "Georgia, serif",
+            fontFamily: "'Playfair Display', serif",
           }}
         >
           {title}
@@ -234,7 +234,7 @@ function TripSummary({ form }) {
             fontSize: "13px",
             color: value ? "#fff" : "rgba(255,255,255,0.35)",
             lineHeight: "1.5",
-            fontFamily: "Georgia, serif",
+            fontFamily: "'Playfair Display', serif",
           }}
         >
           {value || "Not selected"}
@@ -246,7 +246,7 @@ function TripSummary({ form }) {
               marginTop: "3px",
               fontSize: "11px",
               color: C.goldSoft,
-              fontFamily: "Georgia, serif",
+              fontFamily: "'Playfair Display', serif",
             }}
           >
             {sub}
@@ -275,7 +275,7 @@ function TripSummary({ form }) {
           color: "#fff",
           fontSize: "16px",
           fontWeight: "700",
-          fontFamily: "Georgia, serif",
+          fontFamily: "'Playfair Display', serif",
           marginBottom: "22px",
         }}
       >
@@ -350,7 +350,7 @@ function TripSummary({ form }) {
               color: C.goldSoft,
               letterSpacing: "0.06em",
               textTransform: "uppercase",
-              fontFamily: "Georgia, serif",
+              fontFamily: "'Playfair Display', serif",
             }}
           >
             Expert Concierge Included
@@ -363,7 +363,7 @@ function TripSummary({ form }) {
             color: "rgba(255,255,255,0.55)",
             lineHeight: "1.7",
             fontSize: "12px",
-            fontFamily: "Georgia, serif",
+            fontFamily: "'Playfair Display', serif",
           }}
         >
           Once your booking request is submitted, a Lynvista safari specialist
@@ -396,7 +396,7 @@ function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
           fontSize: "clamp(28px,4vw,46px)",
           lineHeight: "1.1",
           color: C.brown,
-          fontFamily: "Georgia, serif",
+          fontFamily: "'Playfair Display', serif",
           fontWeight: "700",
         }}
       >
@@ -410,7 +410,7 @@ function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
           lineHeight: "1.7",
           color: C.muted,
           maxWidth: "620px",
-          fontFamily: "Georgia, serif",
+          fontFamily: "'Playfair Display', serif",
         }}
       >
         Tell us about your dream adventure and our experts will curate a safari
@@ -431,7 +431,7 @@ function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
             borderRadius: "14px",
             padding: "18px",
             color: C.muted,
-            fontFamily: "Georgia, serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "14px",
           }}
         >
@@ -535,7 +535,7 @@ function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
                         fontSize: "16px",
                         fontWeight: "700",
                         lineHeight: "1.3",
-                        fontFamily: "Georgia, serif",
+                        fontFamily: "'Playfair Display', serif",
                       }}
                     >
                       {tour.title}
@@ -581,7 +581,7 @@ function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
                 color: active ? "#fff" : C.dark,
                 fontSize: "13px",
                 fontWeight: active ? "700" : "500",
-                fontFamily: "Georgia, serif",
+                fontFamily: "'Playfair Display', serif",
                 cursor: "pointer",
                 transition: "0.2s ease",
               }}
@@ -671,7 +671,7 @@ function Counter({ label, sub, value, min = 0, onChange }) {
             fontSize: "18px",
             color: C.dark,
             fontWeight: "600",
-            fontFamily: "Georgia, serif",
+            fontFamily: "'Playfair Display', serif",
             marginBottom: "4px",
           }}
         >
@@ -682,7 +682,7 @@ function Counter({ label, sub, value, min = 0, onChange }) {
           style={{
             fontSize: "13px",
             color: C.muted,
-            fontFamily: "Georgia, serif",
+            fontFamily: "'Playfair Display', serif",
           }}
         >
           {sub}
@@ -712,7 +712,7 @@ function Counter({ label, sub, value, min = 0, onChange }) {
             textAlign: "center",
             color: C.dark,
             fontWeight: "700",
-            fontFamily: "Georgia, serif",
+            fontFamily: "'Playfair Display', serif",
           }}
         >
           {value}
@@ -821,7 +821,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
           color: C.brown,
           fontWeight: "700",
           textAlign: "center",
-          fontFamily: "Georgia, serif",
+          fontFamily: "'Playfair Display', serif",
         }}
       >
         Confirm Your African Odyssey
@@ -905,7 +905,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                 flexWrap: "wrap",
               }}
             >
-              {["Bank Transfer", "M-Pesa", "Cash"].map((method) => {
+              {["Bank Transfer", "M-Pesa", "Card"].map((method) => {
                 const active = form.payment_method === method;
 
                 return (
@@ -931,7 +931,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                       color: active ? "#fff" : C.dark,
                       cursor: "pointer",
                       fontSize: "13px",
-                      fontFamily: "Georgia, serif",
+                      fontFamily: "'Playfair Display', serif",
                       fontWeight: active ? "700" : "500",
                     }}
                   >
@@ -977,7 +977,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                       fontSize: "13px",
                       fontWeight: active ? "700" : "500",
                       cursor: "pointer",
-                      fontFamily: "Georgia, serif",
+                      fontFamily: "'Playfair Display', serif",
                     }}
                   >
                     {currency}
@@ -1032,7 +1032,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                 fontSize: "12px",
                 color: C.muted,
                 lineHeight: "1.6",
-                fontFamily: "Georgia, serif",
+                fontFamily: "'Playfair Display', serif",
               }}
             >
               I agree to the Terms and Conditions and Privacy Policy of Lynvista
@@ -1076,7 +1076,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                     alignItems: "center",
                     justifyContent: "center",
                     color: C.muted,
-                    fontFamily: "Georgia, serif",
+                    fontFamily: "'Playfair Display', serif",
                     background: "#f4ede6",
                   }}
                 >
@@ -1093,7 +1093,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                   marginBottom: "6px",
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Playfair Display', serif",
                 }}
               >
                 Your Travel Itinerary
@@ -1105,7 +1105,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                   color: C.dark,
                   fontWeight: "700",
                   marginBottom: "18px",
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Playfair Display', serif",
                 }}
               >
                 {form.tour_package}
@@ -1158,7 +1158,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                 style={{
                   color: C.muted,
                   fontSize: "13px",
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Playfair Display', serif",
                 }}
               >
                 Total Amount
@@ -1169,7 +1169,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                   color: C.brown,
                   fontSize: "30px",
                   fontWeight: "700",
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Playfair Display', serif",
                 }}
               >
                 {form.currency}{" "}
@@ -1185,7 +1185,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                 color: C.muted,
                 lineHeight: "1.7",
                 margin: "0 0 18px",
-                fontFamily: "Georgia, serif",
+                fontFamily: "'Playfair Display', serif",
               }}
             >
               A personalised quotation will be sent to your email within 24
@@ -1202,7 +1202,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                   textAlign: "center",
                   color: "#35623d",
                   fontWeight: "700",
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Playfair Display', serif",
                 }}
               >
                 Booking Submitted Successfully
@@ -1222,7 +1222,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                   fontSize: "14px",
                   fontWeight: "700",
                   letterSpacing: "0.04em",
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Playfair Display', serif",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1268,7 +1268,7 @@ function SummaryLine({ title, value }) {
         style={{
           fontSize: "13px",
           color: C.muted,
-          fontFamily: "Georgia, serif",
+          fontFamily: "'Playfair Display', serif",
         }}
       >
         {title}
@@ -1280,7 +1280,7 @@ function SummaryLine({ title, value }) {
           color: C.dark,
           fontWeight: "700",
           textAlign: "right",
-          fontFamily: "Georgia, serif",
+          fontFamily: "'Playfair Display', serif",
         }}
       >
         {value}
@@ -1331,7 +1331,7 @@ const LABEL = {
   fontWeight: "700",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  fontFamily: "Georgia, serif",
+  fontFamily: "'Playfair Display', serif",
 };
 
 const LABEL_SMALL = {
@@ -1341,7 +1341,7 @@ const LABEL_SMALL = {
   fontWeight: "700",
   textTransform: "uppercase",
   letterSpacing: "0.08em",
-  fontFamily: "Georgia, serif",
+  fontFamily: "'Playfair Display', serif",
 };
 
 const SUBTEXT = {
@@ -1349,7 +1349,7 @@ const SUBTEXT = {
   fontSize: "13px",
   color: C.muted,
   lineHeight: "1.7",
-  fontFamily: "Georgia, serif",
+  fontFamily: "'Playfair Display', serif",
 };
 
 const PAGE_TITLE = {
@@ -1358,7 +1358,7 @@ const PAGE_TITLE = {
   lineHeight: "1.1",
   color: C.brown,
   fontWeight: "700",
-  fontFamily: "Georgia, serif",
+  fontFamily: "'Playfair Display', serif",
 };
 
 const PAGE_DESC = {
@@ -1366,7 +1366,7 @@ const PAGE_DESC = {
   fontSize: "14px",
   lineHeight: "1.7",
   color: C.muted,
-  fontFamily: "Georgia, serif",
+  fontFamily: "'Playfair Display', serif",
   maxWidth: "620px",
 };
 
@@ -1380,7 +1380,7 @@ const INPUT = {
   padding: "0 16px",
   color: C.dark,
   fontSize: "14px",
-  fontFamily: "Georgia, serif",
+  fontFamily: "'Playfair Display', serif",
   boxSizing: "border-box",
   transition: "0.2s ease",
 };
@@ -1400,7 +1400,7 @@ function NextBtn({ onClick, disabled, label }) {
         cursor: disabled ? "not-allowed" : "pointer",
         fontSize: "14px",
         fontWeight: "700",
-        fontFamily: "Georgia, serif",
+        fontFamily: "'Playfair Display', serif",
         display: "flex",
         alignItems: "center",
         gap: "10px",
@@ -1429,7 +1429,7 @@ function BackBtn({ onClick, label }) {
         padding: 0,
         fontSize: "13px",
         fontWeight: "600",
-        fontFamily: "Georgia, serif",
+        fontFamily: "'Playfair Display', serif",
       }}
     >
       <ChevronLeft size={15} />
@@ -1447,7 +1447,7 @@ const COUNT_BTN = (disabled = false) => ({
   color: disabled ? "#d0c2b5" : C.brown,
   cursor: disabled ? "not-allowed" : "pointer",
   fontSize: "18px",
-  fontFamily: "Georgia, serif",
+  fontFamily: "'Playfair Display', serif",
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

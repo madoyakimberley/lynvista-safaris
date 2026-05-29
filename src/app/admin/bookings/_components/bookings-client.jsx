@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Search,
   RefreshCcw,
-  Plus,
   Trash2,
   X,
   CheckCircle,
@@ -13,6 +12,8 @@ import {
   Smartphone,
   CreditCard,
   Building2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import BookingsTable from "./bookings-table";
 
@@ -25,6 +26,12 @@ export default function BookingsClient({ initialBookings }) {
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [quoteItems, setQuoteItems] = useState([
@@ -33,6 +40,8 @@ export default function BookingsClient({ initialBookings }) {
   const [paymentMethod, setPaymentMethod] = useState("M-Pesa");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
+
+  const [bankInstructions, setBankInstructions] = useState("");
 
   const totalAmount = quoteItems.reduce(
     (sum, i) => sum + (Number(i.price) || 0),
@@ -52,6 +61,11 @@ export default function BookingsClient({ initialBookings }) {
   useEffect(() => {
     refresh();
   }, []);
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filter]);
 
   const deleteBooking = async (id) => {
     if (!confirm("Are you sure you want to delete this booking?")) return;
@@ -81,24 +95,30 @@ export default function BookingsClient({ initialBookings }) {
   };
 
   const openQuoteModal = (booking) => {
+    // 🔥 DEBUG: Log the entire booking object to see what data is being passed
+    console.log("Opening quote modal for booking:", booking);
+
     setSelectedBooking(booking);
+    setBankInstructions("");
     setQuoteItems([
       { name: "Base Package", price: booking.quoted_price || "" },
     ]);
+
+    // Also log the state that will be sent to the API
+    console.log("Current payment method state:", paymentMethod);
+
     setIsModalOpen(true);
     setStatusMessage(null);
   };
-
   const handleSendQuote = async () => {
     setIsSubmitting(true);
     setStatusMessage(null);
 
     try {
-      const res = await fetch("/api/admin/bookings", {
+      const res = await fetch("/api/admin/bookings/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "quote",
           id: selectedBooking.id,
           quoted_price: totalAmount,
           items: quoteItems,
@@ -106,6 +126,9 @@ export default function BookingsClient({ initialBookings }) {
           full_name: selectedBooking.full_name,
           currency: selectedBooking.currency || "USD",
           payment_method: paymentMethod,
+          // ADD THIS LINE BELOW
+          payment_instructions:
+            paymentMethod === "Bank Transfer" ? bankInstructions : "",
         }),
       });
 
@@ -127,11 +150,19 @@ export default function BookingsClient({ initialBookings }) {
     }
   };
 
+  // Filtering Logic
   const filtered = (Array.isArray(bookings) ? bookings : [])
     .filter((b) =>
       (b.full_name || "").toLowerCase().includes(search.toLowerCase()),
     )
     .filter((b) => (filter === "All" ? true : b.payment_status === filter));
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedBookings = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   return (
     <div className="min-h-screen p-6 text-[#2d1b0b] bg-[#faf8f3]">
@@ -164,13 +195,68 @@ export default function BookingsClient({ initialBookings }) {
         </select>
       </div>
 
-      <BookingsTable
-        bookings={filtered}
-        sendPaymentLink={openQuoteModal}
-        markPaid={markPaid}
-        deleteBooking={deleteBooking}
-      />
+      <div className="bg-white rounded-2xl shadow-sm border border-[#2d1b0b]/10 overflow-hidden">
+        <BookingsTable
+          bookings={paginatedBookings}
+          sendPaymentLink={openQuoteModal}
+          markPaid={markPaid}
+          deleteBooking={deleteBooking}
+        />
 
+        {/* Pagination Controls */}
+        {filtered.length > 0 && (
+          <div className="p-4 border-t border-[#2d1b0b]/10 flex items-center justify-between text-sm text-gray-500 bg-[#faf8f3]">
+            <div>
+              Showing{" "}
+              <span className="font-bold text-[#2d1b0b]">
+                {(currentPage - 1) * itemsPerPage + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-bold text-[#2d1b0b]">
+                {Math.min(currentPage * itemsPerPage, filtered.length)}
+              </span>{" "}
+              of{" "}
+              <span className="font-bold text-[#2d1b0b]">
+                {filtered.length}
+              </span>{" "}
+              bookings
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 rounded-lg font-bold ${
+                    currentPage === i + 1
+                      ? "bg-[#2d1b0b] text-[#fbbf24]"
+                      : "border border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal remains unchanged from your code but ensure lucide-react icons are imported */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#2d1b0b]/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -226,6 +312,20 @@ export default function BookingsClient({ initialBookings }) {
                 ))}
               </div>
 
+              {paymentMethod === "Bank Transfer" && (
+                <div className="space-y-2 mt-4">
+                  <label className="text-[10px] font-bold uppercase text-gray-400">
+                    Bank Instructions
+                  </label>
+                  <textarea
+                    className="w-full p-3 rounded-xl border border-gray-200 text-sm h-24 outline-none focus:border-[#2d1b0b]"
+                    placeholder="Enter Bank Name, Account Number, etc..."
+                    value={bankInstructions}
+                    onChange={(e) => setBankInstructions(e.target.value)}
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-gray-400">
                   Line Items
@@ -278,7 +378,7 @@ export default function BookingsClient({ initialBookings }) {
                   <span className="text-[10px] opacity-60 uppercase font-bold tracking-wider">
                     Total Amount
                   </span>
-                  <p className="text-2xl font-bold">
+                  <p className="text-2xl font-bold font-serif">
                     {selectedBooking?.currency} {totalAmount.toLocaleString()}
                   </p>
                 </div>

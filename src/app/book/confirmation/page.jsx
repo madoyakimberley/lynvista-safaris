@@ -102,9 +102,7 @@ function ConfirmationContent() {
             Your African Odyssey <br /> Awaits
           </h1>
           <p className="text-base md:text-lg text-white/90 font-medium max-w-2xl mx-auto leading-relaxed">
-            Thank you for choosing Lynvista Safaris. Your request has been
-            received, and our private concierge is already crafting your bespoke
-            experience.
+            Thank you for choosing Lynvista Safaris.
           </p>
         </div>
       </section>

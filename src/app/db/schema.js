@@ -99,7 +99,7 @@ export const bookings = mysqlTable("bookings", {
   payment_method: mysqlEnum("payment_method", [
     "Bank Transfer",
     "M-Pesa",
-    "Cash",
+    "Card",
     "Other",
   ]).default("Bank Transfer"),
   payment_reference: varchar("payment_reference", { length: 255 }),
@@ -125,7 +125,12 @@ export const quotes = mysqlTable("quotes", {
   id: int("id").primaryKey().autoincrement(),
   booking_id: int("booking_id").notNull(),
   total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
-  payment_method: mysqlEnum("payment_method", ["Paystack", "M-Pesa"]).notNull(),
+  payment_method: mysqlEnum("payment_method", [
+    "Paystack",
+    "M-Pesa",
+    "Card",
+    "Bank Transfer",
+  ]).notNull(),
   payment_link: text("payment_link"),
   created_at: timestamp("created_at").defaultNow(),
 });

@@ -1,0 +1,1 @@
+ALTER TABLE `bookings` MODIFY COLUMN `payment_method` enum('Bank Transfer','M-Pesa','Card','Other') DEFAULT 'Bank Transfer';
