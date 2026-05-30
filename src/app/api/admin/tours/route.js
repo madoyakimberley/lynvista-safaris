@@ -85,21 +85,42 @@ export async function PUT(req) {
 
     const sanitizedId = parseInt(id, 10);
 
+    // ✅ ONLY ALLOW SAFE FIELDS (prevents toISOString crash)
     const sanitizedUpdateData = {
-      ...updateData,
+      title: updateData.title,
+      slug: updateData.slug,
+      description: updateData.description,
+      location: updateData.location,
+      duration: updateData.duration,
+      image: updateData.image,
       base_price: updateData.base_price ? parseFloat(updateData.base_price) : 0,
     };
 
-    const updatedTour = await db
+    // remove undefined values (extra safety)
+    Object.keys(sanitizedUpdateData).forEach((key) => {
+      if (sanitizedUpdateData[key] === undefined) {
+        delete sanitizedUpdateData[key];
+      }
+    });
+
+    // 1. update record
+    await db
       .update(tours)
       .set(sanitizedUpdateData)
       .where(eq(tours.id, sanitizedId));
 
-    console.log("✅ Tour updated:", updatedTour);
+    // 2. fetch updated record
+    const updatedTour = await db
+      .select()
+      .from(tours)
+      .where(eq(tours.id, sanitizedId));
+
+    console.log("✅ Tour updated:", updatedTour[0]);
 
     return NextResponse.json({
       success: true,
       message: "Tour updated successfully",
+      tour: updatedTour[0],
     });
   } catch (error) {
     console.error("PUT Error:", error);

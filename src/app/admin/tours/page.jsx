@@ -92,9 +92,11 @@ export default function ToursManager() {
     setFormMessage(null);
 
     const method = editingId ? "PUT" : "POST";
-    const payload = editingId ? { ...formData, id: editingId } : formData;
 
-    // Ensure numeric conversion for price
+    const payload = editingId
+      ? { ...formData, id: Number(editingId) }
+      : formData;
+
     payload.base_price = Number(payload.base_price);
 
     try {
@@ -104,33 +106,39 @@ export default function ToursManager() {
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        await fetchTours();
-        closeModal();
-      } else {
-        // BYPASS: The server failed (500), but we are mocking the UI update to keep moving.
+      const data = await res.json();
+
+      if (!res.ok) {
         setFormMessage({
           type: "error",
-          text: "Server 500 error ignored. Mocking data locally to unblock your workflow.",
+          text: data?.error || "Server error occurred while saving tour.",
         });
-
-        setTimeout(() => {
-          if (editingId) {
-            setTours(tours.map((t) => (t.id === editingId ? payload : t)));
-          } else {
-            // Give it a fake ID so it renders in the grid
-            setTours([...tours, { ...payload, id: `mock-${Date.now()}` }]);
-          }
-          closeModal();
-          setIsSubmitting(false);
-        }, 1500);
+        return;
       }
+
+      // CREATE
+      if (!editingId) {
+        setTours((prev) => [...prev, data.tour]);
+      }
+
+      // UPDATE
+      if (editingId) {
+        setTours((prev) =>
+          prev.map((t) => (t.id === Number(editingId) ? data.tour : t)),
+        );
+      }
+
+      closeModal();
     } catch (error) {
-      setFormMessage({ type: "error", text: "Network error occurred." });
+      setFormMessage({
+        type: "error",
+        text: "Network error occurred.",
+      });
+    } finally {
+      // ✅ ALWAYS STOPS LOADER (THIS IS THE FIX)
       setIsSubmitting(false);
     }
   };
-
   // Handle Delete with DOM confirmation
   const handleDeleteClick = (id) => {
     setDeleteConfirmation({ id });
