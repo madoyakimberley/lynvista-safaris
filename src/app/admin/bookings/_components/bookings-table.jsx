@@ -91,7 +91,7 @@ export default function BookingsTable({
                   </td>
 
                   <td className="py-4 px-6">
-                    <div className="flex gap-2 justify-end items-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-2 justify-end items-center">
                       <button
                         onClick={() => sendPaymentLink(b)}
                         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${

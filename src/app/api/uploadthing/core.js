@@ -7,6 +7,11 @@ export const ourFileRouter = {
     image: { maxFileSize: "6MB", maxFileCount: 1 },
   }).onUploadComplete(async ({ file }) => {
     // This runs after the file is successfully uploaded to storage
-    return { url: file.url };
+    console.log("Upload completed! File object data:", file);
+
+    // Safely grab whichever URL string your current version is providing
+    const fileUrl = file.ufsUrl || file.url;
+
+    return { url: fileUrl, ufsUrl: fileUrl };
   }),
 };
