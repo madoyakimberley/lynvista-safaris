@@ -79,14 +79,6 @@ function MainFooter() {
               </li>
               <li>
                 <a
-                  href="/blog"
-                  className="hover:text-[#fbbf24] transition-colors"
-                >
-                  Travel Blog
-                </a>
-              </li>
-              <li>
-                <a
                   href="/book"
                   className="hover:text-[#fbbf24] transition-colors"
                 >

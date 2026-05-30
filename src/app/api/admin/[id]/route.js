@@ -42,13 +42,16 @@ export async function DELETE(req, { params }) {
 
     // 4. Atomic Database Operation (Transaction)
     const result = await db.transaction(async (tx) => {
-      // Execute delete
-      const [deletedUser] = await tx
-        .delete(admins)
-        .where(eq(admins.id, adminIdToDelete))
-        .returning({ deletedId: admins.id });
+      // First, check if the admin exists
+      const [existingAdmin] = await tx
+        .select()
+        .from(admins)
+        .where(eq(admins.id, adminIdToDelete));
 
-      if (!deletedUser) return null;
+      if (!existingAdmin) return null;
+
+      // Execute delete
+      await tx.delete(admins).where(eq(admins.id, adminIdToDelete));
 
       // Log the action into auditLogs
       await tx.insert(auditLogs).values({
@@ -56,7 +59,7 @@ export async function DELETE(req, { params }) {
         action: `Deleted admin ID: ${adminIdToDelete}`,
       });
 
-      return deletedUser;
+      return existingAdmin;
     });
 
     if (!result) {
@@ -70,6 +73,6 @@ export async function DELETE(req, { params }) {
   } catch (error) {
     console.error("Delete Error:", error);
     // Generic catch-all to prevent leaking server details
-    return new NextResponse("Unauthorized Access", { status: 401 });
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
