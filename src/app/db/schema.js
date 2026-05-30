@@ -8,13 +8,13 @@ import {
   mysqlEnum,
   primaryKey,
   date,
+  boolean, // Drizzle handles this as tinyint(1) for MySQL
 } from "drizzle-orm/mysql-core";
 
 /* =======================
    ADMINS
 ======================= */
 export const admins = mysqlTable("admins", {
-  // Using int + autoincrement instead of serial to prevent TiDB conflict
   id: int("id").primaryKey().autoincrement(),
   email: varchar("email", { length: 150 }).notNull().unique(),
   password_hash: varchar("password_hash", { length: 255 }).notNull(),
@@ -33,13 +33,28 @@ export const tours = mysqlTable("tours", {
   base_price: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
   duration: varchar("duration", { length: 50 }).notNull(),
   location: varchar("location", { length: 100 }).notNull(),
-  // ADD THIS LINE TO MATCH YOUR DB
   image: varchar("image", { length: 255 }),
   created_at: timestamp("created_at").defaultNow(),
 });
 
 /* =======================
-   SERVICES
+   POSTS/BLOGS (Fixed for MySQL)
+======================= */
+export const posts = mysqlTable("posts", {
+  id: int("id").primaryKey().autoincrement(),
+  title: text("title").notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  excerpt: text("excerpt"),
+  content: text("content").notNull(),
+  imageUrl: text("image_url"),
+  author: varchar("author", { length: 100 }).default("Lynvista Team"),
+  published: boolean("published").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+/* =======================
+   SERVICES & OTHER TABLES
 ======================= */
 export const services = mysqlTable("services", {
   id: int("id").primaryKey().autoincrement(),
@@ -50,9 +65,6 @@ export const services = mysqlTable("services", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-/* =======================
-   TOUR SERVICES (M:N)
-======================= */
 export const tourServices = mysqlTable(
   "tour_services",
   {
@@ -64,17 +76,12 @@ export const tourServices = mysqlTable(
   }),
 );
 
-/* =======================
-   BOOKINGS (Updated Schema)
-======================= */
 export const bookings = mysqlTable("bookings", {
   id: int("id").primaryKey().autoincrement(),
   full_name: varchar("full_name", { length: 100 }).notNull(),
   email: varchar("email", { length: 100 }).notNull(),
   phone: varchar("phone", { length: 30 }).notNull(),
   tour_package: varchar("tour_package", { length: 255 }),
-
-  // --- NEW FIELDS ADDED ---
   travel_start_date: date("travel_start_date"),
   travel_end_date: date("travel_end_date"),
   adults: int("adults").default(1),
@@ -83,34 +90,26 @@ export const bookings = mysqlTable("bookings", {
   departure_city: varchar("departure_city", { length: 255 }),
   arrival_city: varchar("arrival_city", { length: 255 }),
   accommodation_type: varchar("accommodation_type", { length: 255 }),
-  // ------------------------
-
   currency: mysqlEnum("currency", ["EUR", "USD", "KES"])
     .notNull()
     .default("USD"),
   notes: text("notes"),
   admin_notes: text("admin_notes"),
-
   quoted_price: decimal("quoted_price", { precision: 10, scale: 2 }),
-
   payment_method: mysqlEnum("payment_method", [
     "Bank Transfer",
     "M-Pesa",
-    "Cash",
+    "Card",
     "Other",
   ]).default("Bank Transfer"),
-
   payment_reference: varchar("payment_reference", { length: 255 }),
   payment_proof_url: varchar("payment_proof_url", { length: 500 }),
-
   payment_link_sent: mysqlEnum("payment_link_sent", ["Yes", "No"]).default(
     "No",
   ),
-
   managed_status: mysqlEnum("managed_status", ["Pending", "Managed"]).default(
     "Pending",
   ),
-
   payment_status: mysqlEnum("payment_status", [
     "Pending",
     "Quotation Sent",
@@ -118,26 +117,24 @@ export const bookings = mysqlTable("bookings", {
     "Paid",
     "Cancelled",
   ]).default("Pending"),
-
   created_at: timestamp("created_at").defaultNow(),
   user_id: int("user_id"),
 });
 
-/* =======================
-   QUOTES
-======================= */
 export const quotes = mysqlTable("quotes", {
   id: int("id").primaryKey().autoincrement(),
   booking_id: int("booking_id").notNull(),
   total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
-  payment_method: mysqlEnum("payment_method", ["Paystack", "M-Pesa"]).notNull(),
+  payment_method: mysqlEnum("payment_method", [
+    "Paystack",
+    "M-Pesa",
+    "Card",
+    "Bank Transfer",
+  ]).notNull(),
   payment_link: text("payment_link"),
   created_at: timestamp("created_at").defaultNow(),
 });
 
-/* =======================
-   QUOTE ITEMS
-======================= */
 export const quoteItems = mysqlTable("quote_items", {
   id: int("id").primaryKey().autoincrement(),
   quote_id: int("quote_id").notNull(),
@@ -145,18 +142,24 @@ export const quoteItems = mysqlTable("quote_items", {
   item_price: decimal("item_price", { precision: 10, scale: 2 }).notNull(),
 });
 
-/* =======================
-   BOOKING SERVICES (M:N)
-======================= */
 export const bookingServices = mysqlTable("booking_services", {
   id: int("id").primaryKey().autoincrement(),
   booking_id: int("booking_id").notNull(),
   service_id: int("service_id").notNull(),
 });
 
-/* =======================
-   AUDIT LOGS
-======================= */
+export const inquiries = mysqlTable("inquiries", {
+  id: int("id").primaryKey().autoincrement(),
+  full_name: varchar("full_name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 100 }).notNull(),
+  subject: varchar("subject", { length: 150 }).notNull(),
+  message: text("message").notNull(),
+  status: mysqlEnum("status", ["Pending", "Reviewed", "Archived"]).default(
+    "Pending",
+  ),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 export const auditLogs = mysqlTable("audit_logs", {
   id: int("id").primaryKey().autoincrement(),
   admin_id: int("admin_id").notNull(),

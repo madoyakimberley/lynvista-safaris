@@ -11,7 +11,7 @@ export default function useBook() {
     try {
       setLoading(true);
       setError(null);
-      setSuccess(false);
+      setSuccess(false); // reset on every request
 
       const res = await fetch("/api/bookings", {
         method: "POST",
@@ -23,12 +23,16 @@ export default function useBook() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || "Booking failed");
+      if (!res.ok) {
+        throw new Error(data.message || "Booking failed");
+      }
 
       setSuccess(true);
-      return data;
+      return data; // ✅ always return success data
     } catch (err) {
-      setError(err.message);
+      const message = err?.message || "Something went wrong";
+      setError(message);
+      return { error: message }; // ✅ consistent return
     } finally {
       setLoading(false);
     }

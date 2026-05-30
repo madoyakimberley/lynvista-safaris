@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Lock, AtSign, ArrowRight, HelpCircle, Loader2 } from "lucide-react";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage("");
 
     try {
       const res = await fetch("/api/admin/auth/login", {
@@ -25,87 +27,139 @@ export default function AdminLogin() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Invalid credentials");
 
-      router.push("/admin");
-      router.refresh();
+      // Trigger success DOM state
+      setLoginSuccess(true);
+
+      // Artificial delay to show the nice success animation before redirecting
+      setTimeout(() => {
+        router.push("/admin");
+        router.refresh();
+      }, 1500);
     } catch (err) {
-      alert(err.message);
-    } finally {
+      setErrorMessage(err.message);
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex justify-center items-center h-screen bg-[#2d1a12]">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md space-y-8 border-t-8 border-[#78350f]"
-      >
-        <div className="text-center">
-          <h2 className="text-4xl font-black tracking-tight text-[#2d1a12]">
-            ADMIN
+    <div
+      className="min-h-screen flex items-center justify-center relative bg-[#2A1D16]"
+      style={{
+        // Using a placeholder savanna sunset background similar to the image
+        backgroundImage:
+          "linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&q=80&w=2668')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="bg-[#FAF9F6] px-10 py-14 shadow-2xl w-full max-w-[420px] rounded-md relative flex flex-col items-center">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-serif font-bold text-[#4A2E1B] tracking-tight mb-1">
+            Lynvista Safaris
           </h2>
-          <p className="text-[#78350f] font-medium mt-2">
-            Lynvista Management Portal
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C8279] font-bold">
+            Administrative Portal
           </p>
         </div>
 
-        <div className="space-y-5">
-          {/* Email Input */}
-          <div className="relative">
-            <label className="block text-xs font-bold text-[#451a03] mb-2 uppercase tracking-wide">
-              Admin Email
-            </label>
-            <div className="flex items-center border-2 border-[#78350f] rounded-xl bg-[#fdfaf9] focus-within:ring-4 focus-within:ring-amber-100 transition-all">
-              <Mail className="ml-3 text-[#78350f]" size={20} />
-              <input
-                type="email"
-                placeholder="youremail@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-4 bg-transparent outline-none text-[#2d1a12] font-semibold"
-                required
-              />
+        {/* Success State Overlay / Content Replacement */}
+        {loginSuccess ? (
+          <div className="flex flex-col items-center justify-center w-full py-10 opacity-0 animate-[fadeIn_0.5s_ease-in-out_forwards]">
+            <div className="w-16 h-16 bg-[#F2EDE4] rounded-full flex items-center justify-center mb-6">
+              <Loader2 className="text-[#8C4B25] animate-spin" size={32} />
             </div>
+            <h3 className="text-xl font-serif font-bold text-[#4A2E1B] mb-2">
+              Access Granted
+            </h3>
+            <p className="text-sm text-[#8C8279]">
+              Establishing secure session...
+            </p>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="w-full space-y-8">
+            {/* Error Message DOM */}
+            {errorMessage && (
+              <div className="bg-red-50 text-red-600 text-xs p-3 rounded text-center border border-red-100">
+                {errorMessage}
+              </div>
+            )}
 
-          {/* Password Input */}
-          <div className="relative">
-            <label className="block text-xs font-bold text-[#451a03] mb-2 uppercase tracking-wide">
-              Password
-            </label>
-            <div className="flex items-center border-2 border-[#78350f] rounded-xl bg-[#fdfaf9] focus-within:ring-4 focus-within:ring-amber-100 transition-all">
-              <Lock className="ml-3 text-[#78350f]" size={20} />
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-4 bg-transparent outline-none text-[#2d1a12] font-semibold"
-                required
-              />
+            {/* Email Input */}
+            <div>
+              <label className="block text-[10px] uppercase tracking-[0.15em] text-[#4A2E1B] font-bold mb-2">
+                Administrator Email
+              </label>
+              <div className="flex items-center border-b border-[#DCD5CB] pb-2 focus-within:border-[#8C4B25] transition-colors">
+                <AtSign className="text-[#A8A096]" size={16} />
+                <input
+                  type="email"
+                  placeholder="admin@lynvista.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full ml-3 bg-transparent text-sm text-[#4A2E1B] placeholder-[#C4BCB3] outline-none font-medium"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div>
+              <label className="block text-[10px] uppercase tracking-[0.15em] text-[#4A2E1B] font-bold mb-2">
+                Secure Password
+              </label>
+              <div className="flex items-center border-b border-[#DCD5CB] pb-2 focus-within:border-[#8C4B25] transition-colors">
+                <Lock className="text-[#A8A096]" size={16} />
+                <input
+                  type="password"
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full ml-3 bg-transparent text-sm tracking-widest text-[#4A2E1B] placeholder-[#C4BCB3] outline-none font-medium"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
               <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="mr-3 text-[#78350f] hover:text-[#451a03]"
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 bg-[#8C4B25] text-white text-sm font-bold tracking-wide rounded-sm hover:bg-[#6D3A1B] transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {loading ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <>
+                    LOG IN <ArrowRight size={16} />
+                  </>
+                )}
               </button>
             </div>
-          </div>
-        </div>
+          </form>
+        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full p-4 bg-[#78350f] text-white rounded-xl font-black text-lg hover:bg-[#451a03] active:scale-[0.98] disabled:opacity-50 transition-all shadow-lg"
-        >
-          {loading ? "VERIFYING..." : "LOG IN NOW"}
-        </button>
+        {/* Footer */}
+        {!loginSuccess && (
+          <button className="flex items-center gap-1.5 text-[11px] text-[#A8A096] mt-10 hover:text-[#4A2E1B] transition-colors">
+            <HelpCircle size={12} />
+            System Support
+          </button>
+        )}
+      </div>
 
-        <p className="text-center text-xs text-gray-400">
-          Secure Encrypted Session
-        </p>
-      </form>
+      {/* Global Style for fade-in animation */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `,
+        }}
+      />
     </div>
   );
 }

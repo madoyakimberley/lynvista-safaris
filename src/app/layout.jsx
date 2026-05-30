@@ -1,14 +1,11 @@
 import "./globals.css";
 
 /* Components */
-import MainNav from "./_components/headers/main-nav";
-import MainFooter from "./_components/footers/main-footer";
-import ScrollButton from "./_components/buttons/scroll";
-import WhatsAppButton from "./_components/buttons/whatsapp";
 import BodyWrapper from "./_components/wrappers/BodyWrapper";
 import AOSWrapper from "./_components/wrappers/AOSWrapper";
+import ConditionalLayout from "./_components/wrappers/ConditionalLayout"; // <-- Import the new wrapper
 
-// 1. New Viewport Export (Fixes the Warning)
+// 1. Viewport Export
 export const viewport = {
   width: "device-width",
   initialScale: 1,
@@ -90,11 +87,8 @@ export default function RootLayout({ children }) {
       <body className="antialiased" suppressHydrationWarning>
         <AOSWrapper>
           <BodyWrapper>
-            <MainNav />
-            <main id="main-content">{children}</main>
-            <MainFooter />
-            <ScrollButton />
-            <WhatsAppButton />
+            {/* The wrapper handles the conditional UI rendering */}
+            <ConditionalLayout>{children}</ConditionalLayout>
           </BodyWrapper>
         </AOSWrapper>
       </body>

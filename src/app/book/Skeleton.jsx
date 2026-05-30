@@ -2,51 +2,29 @@ import React from "react";
 
 export default function Skeleton() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-10 bg-gray-50 animate-pulse w-full">
-      {/* Mimics the booking-card wrapper size and structure */}
-      <div className="w-full max-w-2xl bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 space-y-8">
-        {/* Form Title & Header */}
-        <div className="space-y-3 text-center md:text-left">
-          <div className="h-8 w-1/2 bg-gray-300 rounded-lg mx-auto md:mx-0"></div>
-          <div className="h-4 w-3/4 bg-gray-200 rounded-md mx-auto md:mx-0"></div>
-        </div>
+    <div className="min-h-screen bg-[#fdfbf7] py-20 px-6 animate-pulse">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
+        {/* LEFT COLUMN: Form Inputs Simulator */}
+        <div className="lg:col-span-2 space-y-8">
+          <div className="h-10 w-2/3 bg-gray-200 rounded-lg"></div>
+          <div className="h-6 w-1/2 bg-gray-200 rounded-lg"></div>
 
-        {/* Form Inputs Grid Simulator */}
-        <div className="space-y-6">
-          {/* Row 1: Two inputs (e.g., Name, Email) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <div className="h-3 w-1/4 bg-gray-200 rounded"></div>
-              <div className="h-12 w-full bg-gray-100 rounded-xl"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 w-1/4 bg-gray-200 rounded"></div>
-              <div className="h-12 w-full bg-gray-100 rounded-xl"></div>
-            </div>
-          </div>
-
-          {/* Row 2: Two inputs (e.g., Date, Destination) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <div className="h-3 w-1/4 bg-gray-200 rounded"></div>
-              <div className="h-12 w-full bg-gray-100 rounded-xl"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 w-1/4 bg-gray-200 rounded"></div>
-              <div className="h-12 w-full bg-gray-100 rounded-xl"></div>
-            </div>
-          </div>
-
-          {/* Row 3: Full-width input/textarea (e.g., Special Requests) */}
-          <div className="space-y-2">
-            <div className="h-3 w-1/6 bg-gray-200 rounded"></div>
-            <div className="h-28 w-full bg-gray-100 rounded-xl"></div>
+          <div className="space-y-6 pt-6">
+            <div className="h-16 w-full bg-gray-200 rounded-xl"></div>
+            <div className="h-64 w-full bg-gray-100 rounded-xl"></div>
           </div>
         </div>
 
-        {/* Action Button Simulator */}
-        <div className="pt-4">
-          <div className="h-14 w-full bg-gray-300 rounded-xl"></div>
+        {/* RIGHT COLUMN: Trip Summary Sidebar Simulator */}
+        <div className="lg:col-span-1">
+          <div className="bg-[#2d1b0b]/80 h-[400px] w-full rounded-xl p-8 space-y-8">
+            <div className="h-8 w-1/2 bg-[#442c23] rounded"></div>
+            <div className="space-y-6">
+              <div className="h-4 w-3/4 bg-[#442c23] rounded"></div>
+              <div className="h-4 w-1/2 bg-[#442c23] rounded"></div>
+              <div className="h-4 w-2/3 bg-[#442c23] rounded"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

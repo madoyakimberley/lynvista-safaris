@@ -50,7 +50,7 @@ export async function POST(req) {
     const body = await req.json();
 
     // 1. SAVE TO DATABASE
-    const [result] = await db.insert(bookings).values({
+    const result = await db.insert(bookings).values({
       full_name: body.full_name,
       email: body.email,
       phone: body.phone,
@@ -67,7 +67,14 @@ export async function POST(req) {
       payment_status: "Pending",
     });
 
-    const newBookingId = result.insertId;
+    // Handle Drizzle ORM result structure to extract the insert ID
+    const newBookingId = Array.isArray(result)
+      ? result[0]?.insertId
+      : result.insertId;
+
+    if (!newBookingId) {
+      throw new Error("Failed to capture new booking ID from database.");
+    }
 
     // Common details section used in both emails
     const detailsHtml = `
@@ -99,7 +106,7 @@ export async function POST(req) {
       html: getEmailTemplate(adminContent, "New Booking Notification"),
     });
 
-    return NextResponse.json({ success: true, bookingId: newBookingId });
+    return NextResponse.json({ success: true, id: newBookingId });
   } catch (error) {
     console.error("Submission Failed:", error);
     return NextResponse.json(

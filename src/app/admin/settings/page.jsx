@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserPlus, Trash2, Shield, Clock, Loader2, LogOut } from "lucide-react";
+import {
+  UserPlus,
+  Trash2,
+  History,
+  Loader2,
+  LogOut,
+  Edit3,
+  Ban,
+  CheckCircle2,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import SettingsSkeleton from "./Skeleton";
 
@@ -13,21 +23,48 @@ export default function SettingsPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("admin");
   const [loadingId, setLoadingId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState(null);
   const router = useRouter();
 
+  const showFeedback = (message, type = "success") => {
+    setFeedback({ message, type });
+    setTimeout(() => setFeedback(null), 3000);
+  };
+
   const formatDate = (dateString) => {
-    if (!dateString) return "Just now";
+    if (!dateString) return "Just Now";
     try {
-      return new Date(dateString).toLocaleString("en-GB", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-        day: "numeric",
+      const date = new Date(dateString);
+      const isToday = new Date().toDateString() === date.toDateString();
+      if (isToday) {
+        return `Today, ${date.toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })}`;
+      }
+      return date.toLocaleString("en-GB", {
         month: "short",
+        day: "numeric",
+        year: "numeric",
       });
     } catch (e) {
       return "Recently";
     }
+  };
+
+  const formatNameFromEmail = (emailStr) => {
+    const prefix = emailStr.split("@")[0];
+    return prefix
+      .split(".")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  };
+
+  const getInitials = (name) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
   };
 
   async function loadData() {
@@ -71,6 +108,7 @@ export default function SettingsPage() {
 
   async function addAdmin(e) {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const res = await fetch("/api/admin", {
         method: "POST",
@@ -81,13 +119,17 @@ export default function SettingsPage() {
       if (res.ok) {
         setEmail("");
         setPassword("");
+        setRole("admin");
+        showFeedback("Admin account created successfully.");
         loadData();
       } else {
         const err = await res.json();
-        alert(err.message || "Failed to create admin");
+        showFeedback(err.message || "Failed to create admin", "error");
       }
     } catch (error) {
-      alert("An error occurred during creation.");
+      showFeedback("An error occurred during creation.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -97,13 +139,14 @@ export default function SettingsPage() {
     try {
       const res = await fetch(`/api/admin/${id}`, { method: "DELETE" });
       if (res.ok) {
+        showFeedback("Admin removed successfully.");
         loadData();
       } else {
         const err = await res.json();
-        alert(err.message || "Delete failed");
+        showFeedback(err.message || "Delete failed", "error");
       }
     } catch (error) {
-      alert("Connection error.");
+      showFeedback("Connection error.", "error");
     } finally {
       setLoadingId(null);
     }
@@ -115,142 +158,325 @@ export default function SettingsPage() {
     try {
       const res = await fetch("/api/audit", { method: "DELETE" });
       if (res.ok) {
+        showFeedback("Logs cleared.");
         loadData();
       }
     } catch (error) {
-      alert("Failed to clear logs.");
+      showFeedback("Failed to clear logs.", "error");
     }
   }
 
   if (loading) return <SettingsSkeleton />;
 
   return (
-    <div
-      className="max-w-5xl mx-auto space-y-10 p-4"
-      style={{ color: "#2d1a12" }}
-    >
-      {/* HEADER */}
-      <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-[#e7e3da]">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Shield size={28} className="text-[#78350f]" /> Admin Management
-        </h1>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 bg-red-50 text-red-600 px-5 py-2.5 rounded-full font-bold hover:bg-red-100 transition-all cursor-pointer border border-red-100"
-        >
-          <LogOut size={18} /> Logout
-        </button>
-      </div>
-
-      {/* ADD ADMIN FORM */}
-      <div className="p-6 rounded-xl shadow-sm border bg-white border-[#e7e3da]">
-        <h2 className="font-bold mb-4 flex items-center gap-2 text-lg">
-          <UserPlus size={20} className="text-[#78350f]" /> Add New Admin
-        </h2>
-        <form onSubmit={addAdmin} className="grid md:grid-cols-4 gap-4">
-          <input
-            className="border p-3 rounded-lg outline-none focus:ring-2 focus:ring-[#78350f]/20 transition-all"
-            placeholder="Email Address"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+    <div className="min-h-screen bg-[#FCFAEF] text-[#2C1F16] font-sans pb-20">
+      {/* DOM FEEDBACK OVERLAY */}
+      {feedback && (
+        <div className="fixed top-5 right-5 z-50 bg-white border border-[#EADCC9] shadow-lg p-4 rounded-lg flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2
+            className={
+              feedback.type === "error" ? "text-red-500" : "text-green-600"
+            }
           />
-          <input
-            className="border p-3 rounded-lg outline-none focus:ring-2 focus:ring-[#78350f]/20 transition-all"
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <select
-            className="border p-3 rounded-lg cursor-pointer bg-white outline-none focus:ring-2 focus:ring-[#78350f]/20"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="admin">Admin</option>
-            <option value="super_admin">Super Admin</option>
-          </select>
-          <button className="bg-[#78350f] text-white p-3 rounded-lg font-bold hover:bg-[#451a03] transition-colors cursor-pointer">
-            Create Account
-          </button>
-        </form>
-      </div>
+          <p className="text-sm font-semibold text-[#3B2519]">
+            {feedback.message}
+          </p>
+        </div>
+      )}
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* ADMINS LIST */}
-        <div className="p-6 rounded-xl shadow-sm border bg-white border-[#e7e3da]">
-          <h2 className="font-bold mb-4 text-lg">Registered Admins</h2>
-          <div className="divide-y max-h-125 overflow-y-auto pr-2">
-            {admins.length > 0 ? (
-              admins.map((admin) => (
-                <div
-                  key={admin.id}
-                  className="flex justify-between items-center py-4 hover:bg-gray-50 rounded-lg transition-colors px-2"
-                >
-                  <div>
-                    <p className="font-semibold">{admin.email}</p>
-                    <span className="text-[10px] font-black uppercase bg-amber-100 text-amber-900 px-2 py-0.5 rounded tracking-tighter">
-                      {admin.role}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => deleteAdmin(admin.id)}
-                    disabled={loadingId === admin.id}
-                    className="text-red-400 hover:text-red-600 cursor-pointer p-2 transition-colors disabled:opacity-50"
-                  >
-                    {loadingId === admin.id ? (
-                      <Loader2 size={18} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={18} />
-                    )}
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-400 py-4 italic">
-                No admin records found.
-              </p>
-            )}
+      <div className="max-w-7xl mx-auto pt-16 px-6">
+        {/* HEADER SECTION */}
+        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-serif font-bold text-[#3B2519] mb-3 tracking-tight">
+              Admin Management
+            </h1>
+            <p className="text-[#8C4B25] text-sm max-w-xl leading-relaxed">
+              Manage the stewards of the Lynvista experience. Grant, revoke, and
+              monitor administrative permissions across the concierge ecosystem.
+            </p>
           </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-center gap-2 text-[#8C4B25] hover:text-[#3B2519] bg-white border border-[#EADCC9] px-6 py-2.5 rounded-md font-semibold text-sm transition-all hover:shadow-sm"
+          >
+            <LogOut size={16} /> Sign Out
+          </button>
         </div>
 
-        {/* AUDIT LOGS */}
-        <div className="p-6 rounded-xl shadow-sm border bg-white border-[#e7e3da]">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold flex items-center gap-2 text-lg">
-              <Clock size={20} className="text-[#78350f]" /> Audit Logs
-            </h2>
-            {logs.length > 0 && (
-              <button
-                onClick={clearLogs}
-                className="text-[10px] text-red-600 font-black uppercase cursor-pointer hover:underline tracking-widest"
-              >
-                Clear History
-              </button>
-            )}
-          </div>
-          <div className="max-h-125 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-            {logs.length > 0 ? (
-              logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="text-sm p-4 bg-gray-50 border border-gray-100 rounded-xl flex flex-col gap-1"
-                >
-                  <span className="font-bold text-[#451a03] leading-tight">
-                    {log.action}
-                  </span>
-                  <span className="text-gray-400 text-[10px] font-mono italic">
-                    {formatDate(log.created_at)}
-                  </span>
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* LEFT COLUMN: Actions & Logs (Span 4) */}
+          <div className="lg:col-span-4 space-y-8">
+            {/* ADD ADMIN CARD */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#EADCC9] p-7">
+              <div className="flex items-center gap-3 mb-6 text-[#3B2519]">
+                <UserPlus size={22} className="text-[#D97706]" />
+                <h2 className="font-serif text-2xl font-bold">Add New Admin</h2>
+              </div>
+
+              <form onSubmit={addAdmin} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#8C4B25]">
+                    Email Address
+                  </label>
+                  <input
+                    className="w-full bg-[#FCFAEF] border border-[#EADCC9] p-3 rounded-md outline-none focus:ring-2 focus:ring-[#FBBF24] transition-all text-sm"
+                    placeholder="admin@lynvista.com"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-400 italic py-4">
-                No recent activity recorded.
-              </p>
-            )}
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#8C4B25]">
+                    Initial Password
+                  </label>
+                  <input
+                    className="w-full bg-[#FCFAEF] border border-[#EADCC9] p-3 rounded-md outline-none focus:ring-2 focus:ring-[#FBBF24] transition-all text-sm tracking-widest"
+                    placeholder="••••••••"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#8C4B25]">
+                    Access Level
+                  </label>
+                  <select
+                    className="w-full bg-[#FCFAEF] border border-[#EADCC9] p-3 rounded-md outline-none focus:ring-2 focus:ring-[#FBBF24] transition-all text-sm cursor-pointer"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  >
+                    <option value="admin">Administrator</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#5C3D2E] text-white p-3.5 rounded-md font-bold text-sm hover:bg-[#3B2519] transition-colors shadow-md mt-2 flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {isSubmitting ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    "Create Admin Account"
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* AUDIT LOGS CARD */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#EADCC9] p-7">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3 text-[#3B2519]">
+                  <History size={20} className="text-[#D97706]" />
+                  <h2 className="font-serif text-2xl font-bold">Audit Logs</h2>
+                </div>
+                {logs.length > 0 && (
+                  <button
+                    onClick={clearLogs}
+                    className="text-xs font-bold text-[#8C4B25] hover:text-[#D97706] transition-colors"
+                  >
+                    View All / Clear
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                {logs.length > 0 ? (
+                  logs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="text-sm p-4 bg-[#FCFAEF] border-l-2 border-[#D97706] rounded-r-md flex flex-col gap-1.5"
+                    >
+                      <span className="font-semibold text-[#3B2519] leading-tight">
+                        {log.action}
+                      </span>
+                      <span className="text-[#8C8279] text-xs">
+                        {formatDate(log.created_at)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-sm text-[#8C8279] border border-dashed border-[#EADCC9] rounded-lg">
+                    No recent system activity.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Stewards List & Banner (Span 8) */}
+          <div className="lg:col-span-8 space-y-8">
+            {/* ACTIVE STEWARDS TABLE CARD */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#EADCC9] overflow-hidden flex flex-col">
+              <div className="p-7 border-b border-[#EADCC9] flex justify-between items-end bg-white">
+                <div>
+                  <h2 className="text-3xl font-serif font-bold text-[#D97706] mb-1">
+                    Active Stewards
+                  </h2>
+                  <p className="text-sm text-[#8C8279]">
+                    Managing the core team accounts.
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 text-sm font-semibold text-[#8C4B25]">
+                  <span>All Roles</span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAF2E8] text-[10px] tracking-widest uppercase text-[#8C4B25] border-y border-[#EADCC9]">
+                      <th className="py-4 px-7 font-bold">Administrator</th>
+                      <th className="py-4 px-4 font-bold">Role</th>
+                      <th className="py-4 px-4 font-bold">Last Login</th>
+                      <th className="py-4 px-7 font-bold text-right">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {admins.length > 0 ? (
+                      admins.map((admin, idx) => {
+                        const displayName = formatNameFromEmail(admin.email);
+                        const isSuperAdmin = admin.role === "super_admin";
+
+                        return (
+                          <tr
+                            key={admin.id}
+                            className="border-b border-gray-50 hover:bg-[#FCFAEF]/50 transition group"
+                          >
+                            <td className="py-5 px-7">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 bg-gray-100 text-gray-600">
+                                  {getInitials(displayName)}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-[#2C1F16] text-sm">
+                                    {displayName}
+                                  </h4>
+                                  <p className="text-xs text-[#8C8279]">
+                                    {admin.email}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-5 px-4">
+                              <span
+                                className={`px-2.5 py-1 rounded text-[10px] font-bold tracking-wider inline-block
+                                ${isSuperAdmin ? "bg-[#FBBF24] text-[#78350F]" : "text-[#8C8279]"}`}
+                              >
+                                {isSuperAdmin ? (
+                                  <>
+                                    Super
+                                    <br />
+                                    Admin
+                                  </>
+                                ) : (
+                                  "Editor"
+                                )}
+                              </span>
+                            </td>
+                            <td className="py-5 px-4 text-sm text-[#5C3D2E] font-medium whitespace-pre-line">
+                              {formatDate(admin.created_at)}
+                            </td>
+                            <td className="py-5 px-7">
+                              <div className="flex items-center justify-end gap-3 text-gray-400">
+                                <button
+                                  className="p-1.5 hover:text-[#D97706] transition"
+                                  title="Edit Permissions"
+                                >
+                                  <Edit3 size={18} />
+                                </button>
+                                <button
+                                  onClick={() => deleteAdmin(admin.id)}
+                                  disabled={loadingId === admin.id}
+                                  className="p-1.5 hover:text-red-600 transition disabled:opacity-50"
+                                  title="Revoke Access"
+                                >
+                                  {loadingId === admin.id ? (
+                                    <Loader2
+                                      size={18}
+                                      className="animate-spin"
+                                    />
+                                  ) : isSuperAdmin ? (
+                                    <Ban
+                                      size={18}
+                                      className="text-red-400/50 hover:text-red-600"
+                                    />
+                                  ) : (
+                                    <Trash2
+                                      size={18}
+                                      className="text-red-400 hover:text-red-600"
+                                    />
+                                  )}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="py-16 text-center text-[#8C8279] text-sm"
+                        >
+                          No administrative accounts registered yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Table Footer */}
+              <div className="p-4 bg-[#FAF2E8]/40 border-t border-[#EADCC9] flex items-center justify-between text-xs font-bold text-[#8C4B25]">
+                <span>Showing {admins.length} Administrators</span>
+                <div className="flex gap-1">
+                  <button className="px-2.5 py-1 border border-[#EADCC9] rounded bg-white hover:bg-gray-50 transition text-gray-400">
+                    &lt;
+                  </button>
+                  <button className="px-2.5 py-1 border border-[#5C3D2E] rounded bg-[#5C3D2E] text-white transition">
+                    1
+                  </button>
+                  <button className="px-2.5 py-1 border border-[#EADCC9] rounded bg-white hover:bg-gray-50 transition">
+                    2
+                  </button>
+                  <button className="px-2.5 py-1 border border-[#EADCC9] rounded bg-white hover:bg-gray-50 transition text-gray-400">
+                    &gt;
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* AESTHETIC BANNER */}
+            <div className="relative rounded-xl overflow-hidden h-48 shadow-sm flex items-end p-6 border border-[#EADCC9]">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#2D1B0B] via-[#5C3D2E] to-[#D97706] opacity-90 z-0"></div>
+              <div className="absolute inset-0 bg-black/20 z-0"></div>
+
+              <div className="relative z-10">
+                <h3 className="text-white font-serif text-2xl font-bold mb-1 tracking-wide">
+                  Preserving the Horizon
+                </h3>
+                <p className="text-white/80 text-sm max-w-lg">
+                  Every administrative action is a step toward ensuring the
+                  legacy of the wild remains untouched for the modern explorer.
+                </p>
+              </div>
+
+              <div className="absolute top-4 right-4 z-10">
+                <div className="w-2 h-2 border-2 border-white/40 rounded-full"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

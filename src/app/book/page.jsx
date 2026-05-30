@@ -11,7 +11,6 @@ export default function BookingPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // This hits your Next.js API route
         const response = await fetch("/api/tours");
         const data = await response.json();
         setTours(data);
@@ -30,8 +29,9 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="booking-bg min-h-screen flex items-center justify-center p-10">
-      <div className="booking-card">
+    // Updated container to match the light background aesthetic
+    <div className="min-h-screen bg-[#fdfbf7] py-20 px-6">
+      <div className="max-w-6xl mx-auto">
         {/* Pass the fetched tours down to your form */}
         <MainBookingForm tours={tours} />
       </div>
