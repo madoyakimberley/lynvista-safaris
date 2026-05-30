@@ -10,7 +10,8 @@ export function middleware(req) {
     pathname === "/admin/login" ||
     pathname.startsWith("/api/admin/auth") ||
     pathname === "/api/tours" ||
-    pathname === "/api/bookings";
+    pathname === "/api/bookings" ||
+    pathname === "/api/services";
 
   // 2. Protect Admin & API routes
   const isProtectedArea =
