@@ -479,12 +479,6 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-
-        {/* FOOTER */}
-        <div className="mt-16 mb-8 pt-6 border-t border-[#E8E2D9] flex justify-between text-xs text-[#8C8279] font-medium tracking-wide">
-          <span>Lynvista Safaris</span>
-          <span>© 2026 Lynvista Safaris. All rights reserved.</span>
-        </div>
       </div>
     </div>
   );

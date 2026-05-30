@@ -378,13 +378,6 @@ export default function ManageOfferings() {
             </tbody>
           </table>
         </div>
-
-        {/* Footer Design Frame */}
-        <div className="mt-12 pt-6 border-t border-[#E8E2D9] flex justify-between text-sm text-[#8C8279] font-medium max-w-4xl mx-auto">
-          <span>Lynvista Safaris</span>
-          <span>© 2026 Lynvista Safaris. All rights reserved.</span>
-          <span>Privacy Policy</span>
-        </div>
       </div>
 
       {/* Write/Edit Operations Overlay Modal */}
