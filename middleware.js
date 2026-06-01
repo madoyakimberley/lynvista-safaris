@@ -32,20 +32,38 @@ export async function middleware(req) {
   if (isSensitiveApi) {
     // Identify user by their real IP address, falling back to local for dev environments
     const ip = req.ip ?? "127.0.0.1";
-    const { success, limit, remaining, reset } = await ratelimit.limit(ip);
 
-    if (!success) {
-      return NextResponse.json(
-        { error: "Too many requests. Please slow down and try again later." },
-        {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": reset.toString(),
+    try {
+      // Create a fast-failing fallback promise (600ms timeout)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Upstash rate limit timeout")), 600),
+      );
+
+      // Race the actual Redis look-up against our 600ms timeout window
+      const { success, limit, remaining, reset } = await Promise.race([
+        ratelimit.limit(ip),
+        timeoutPromise,
+      ]);
+
+      if (!success) {
+        return NextResponse.json(
+          { error: "Too many requests. Please slow down and try again later." },
+          {
+            status: 429,
+            headers: {
+              "Content-Type": "application/json",
+              "X-RateLimit-Limit": limit.toString(),
+              "X-RateLimit-Remaining": remaining.toString(),
+              "X-RateLimit-Reset": reset.toString(),
+            },
           },
-        },
+        );
+      }
+    } catch (error) {
+      // Fail-Open Strategy: If Redis times out or drops connection, log it and bypass
+      console.warn(
+        "Rate limiting temporarily bypassed due to latency/timeout:",
+        error.message,
       );
     }
   }
