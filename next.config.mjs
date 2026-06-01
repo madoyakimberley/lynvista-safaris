@@ -1,4 +1,5 @@
 import { withSentryConfig } from "@sentry/nextjs";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -12,6 +13,45 @@ const nextConfig = {
         hostname: "utfs.io",
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value:
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.sentry.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://024zpj5zfr.ufs.sh https://utfs.io; connect-src 'self' *.sentry.io; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self' https://www.google.com https://*.google.com; frame-ancestors 'none'; upgrade-insecure-requests;",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value:
+              "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
+          },
+        ],
+      },
+    ];
   },
 };
 
@@ -33,16 +73,10 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: true,
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
   tunnelRoute: "/monitoring",
 
   webpack: {
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
+    // Enables automatic instrumentation of Vercel Cron Monitors.
     automaticVercelMonitors: true,
 
     // Tree-shaking options for reducing bundle size
