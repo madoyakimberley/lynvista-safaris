@@ -1,7 +1,58 @@
+// middleware.js
 import { NextResponse } from "next/server";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-export function middleware(req) {
+// ==========================================
+// INITIALIZE UPSTASH RATE LIMITER
+// ==========================================
+// This connects automatically via your Vercel Environment Variables:
+// UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  // Configuration: Allow 10 requests every 10 seconds per IP address
+  limiter: Ratelimit.slidingWindow(10, "10 s"),
+  analytics: true,
+  prefix: "@upstash/ratelimit",
+});
+
+export async function middleware(req) {
   const { pathname, searchParams } = req.nextUrl;
+
+  // ==========================================
+  // EDGE RATE LIMITING LAYER
+  // ==========================================
+  // Enforce rate limiting specifically on sensitive data-submission endpoints
+  const isSensitiveApi =
+    pathname === "/api/bookings" ||
+    pathname === "/api/inquiry" ||
+    pathname.startsWith("/api/daraja") ||
+    pathname.startsWith("/api/intasend");
+
+  if (isSensitiveApi) {
+    // Identify user by their real IP address, falling back to local for dev environments
+    const ip = req.ip ?? "127.0.0.1";
+    const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please slow down and try again later." },
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+          },
+        },
+      );
+    }
+  }
+
+  // ==========================================
+  // TOKEN & SESSIONS SETUP
+  // ==========================================
   const token = req.cookies.get("admin_token")?.value;
 
   // ==========================================
@@ -10,12 +61,10 @@ export function middleware(req) {
 
   // A. Protect M-Pesa Page (/pay/mpesa/...)
   if (pathname.startsWith("/pay/mpesa")) {
-    // Safely extract ID from either path (/pay/mpesa/123) or query params (?id=123)
     const pathSegments = pathname.split("/").filter(Boolean);
     const pathId = pathSegments.length > 2 ? pathSegments[2] : null;
     const bookingId = pathId || searchParams.get("id");
 
-    // If we can't find an ID in the URL, treat the cookie as missing
     const hasMpesaCookie = bookingId
       ? req.cookies.get(`mpesa_session_${bookingId}`)?.value
       : null;
@@ -55,7 +104,7 @@ export function middleware(req) {
   }
 
   // ==========================================
-  // EXISTING ROUTE RULES
+  // EXISTINGS ROUTE RULES
   // ==========================================
 
   const isPublicGet =

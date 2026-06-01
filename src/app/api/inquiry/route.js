@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/app/db/db";
-import { inquiries } from "@/app/db/schema";
+import { inquiries, insertInquirySchema } from "@/app/db/schema";
 import nodemailer from "nodemailer";
+import * as Sentry from "@sentry/nextjs";
 
 const transporter = nodemailer.createTransport({
   host: "smtp.resend.com",
@@ -49,19 +50,39 @@ export async function POST(req) {
   try {
     const body = await req.json();
 
-    if (!body.full_name || !body.email || !body.message) {
+    // 1. RUN SECURITY VALIDATION
+    const validation = insertInquirySchema.safeParse(body);
+
+    // If validation fails, log the exact field that failed to the terminal, then stop
+    if (!validation.success) {
+      console.log("==========================================");
+      console.error("❌ VALIDATION FAILED ON ENDPOINT!");
+      console.error("INCOMING PAYLOAD:", body);
+      console.error(
+        "ZOD FIELD ERRORS:",
+        validation.error.flatten().fieldErrors,
+      );
+      console.log("==========================================");
+
       return NextResponse.json(
-        { success: false, message: "Missing required fields" },
+        {
+          success: false,
+          message: "Validation failed.",
+          errors: validation.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
 
-    // 1. Save to database using newly updated drizzle schema
+    // 2. EXTRACT SAFE, SANITIZED DATA
+    const validatedData = validation.data;
+
+    // 3. SAVE TO DATABASE USING SANITIZED DATA
     const [result] = await db.insert(inquiries).values({
-      full_name: body.full_name,
-      email: body.email,
-      subject: body.subject || "General Safari Inquiry",
-      message: body.message,
+      full_name: validatedData.full_name,
+      email: validatedData.email,
+      subject: validatedData.subject || "General Safari Inquiry",
+      message: validatedData.message,
     });
 
     const inquiryId = result.insertId;
@@ -69,13 +90,13 @@ export async function POST(req) {
     const detailsHtml = `
       <div class="details-box">
         <p style="margin: 4px 0;"><strong>Inquiry ID:</strong> #${inquiryId}</p>
-        <p style="margin: 4px 0;"><strong>Subject Category:</strong> ${body.subject}</p>
-        <p style="margin: 4px 0;"><strong>Message Summary:</strong> ${body.message}</p>
+        <p style="margin: 4px 0;"><strong>Subject Category:</strong> ${validatedData.subject || "General Safari Inquiry"}</p>
+        <p style="margin: 4px 0;"><strong>Message Summary:</strong> ${validatedData.message}</p>
       </div>`;
 
-    // 2. Draft Email Contents
+    // 4. DRAFT EMAIL CONTENTS
     const clientHtml = `
-      <p>Hello ${body.full_name},</p>
+      <p>Hello ${validatedData.full_name},</p>
       <p>Thank you for reaching out to Lynvista Safaris. We have successfully received your inquiry, and one of our dedicated African travel experts is already reviewing your request.</p>
       ${detailsHtml}
       <p>We aim to respond with bespoke suggestions or follow-up details within 24 hours.</p>
@@ -83,15 +104,15 @@ export async function POST(req) {
 
     const adminHtml = `
       <p><strong>🚨 New Contact Form Inquiry Received</strong></p>
-      <p><strong>Client Name:</strong> ${body.full_name}<br/>
-      <strong>Client Email:</strong> ${body.email}</p>
+      <p><strong>Client Name:</strong> ${validatedData.full_name}<br/>
+      <strong>Client Email:</strong> ${validatedData.email}</p>
       ${detailsHtml}
     `;
 
-    // 3. Dispatch Emails
+    // 5. DISPATCH EMAILS WITH SECURE DATA
     await transporter.sendMail({
       from: `"Lynvista Safaris" <${process.env.EMAIL_USER}>`,
-      to: body.email,
+      to: validatedData.email,
       subject: "We Have Received Your Inquiry - Lynvista Safaris",
       html: getEmailTemplate(clientHtml, "Your Odyssey Begins Here"),
     });
@@ -105,9 +126,15 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true, id: inquiryId });
   } catch (error) {
+    // 6. THE SECURITY & OBSERVABILITY NET
+    // Track production runtime/database exceptions silently via Sentry
+    Sentry.captureException(error);
+
+    // Keep this for clear debugging context in your terminal window
     console.error("Inquiry Processing Failed:", error);
+
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: "An unexpected processing error occurred." },
       { status: 500 },
     );
   }

@@ -1,14 +1,15 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { db } from "@/app/db/db";
-import { bookings } from "@/app/db/schema";
+import { bookings, insertBookingSchema } from "@/app/db/schema";
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.resend.com", // Fixed: changed to the correct SMTP host
+  host: "smtp.resend.com",
   port: 465,
   secure: true,
   auth: {
-    user: "resend", // Keep this exactly as 'resend'
+    user: "resend",
     pass: process.env.RESEND_API_KEY,
   },
 });
@@ -51,23 +52,42 @@ export async function POST(req) {
   try {
     const body = await req.json();
 
-    // 1. SAVE TO DATABASE
+    // 1. RUN SECURITY VALIDATION
+    const validation = insertBookingSchema.safeParse(body);
+
+    // If validation fails, stop execution immediately and pass descriptive errors back to the UI
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Validation failed.",
+          errors: validation.error.flatten().fieldErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    // 2. EXTRACT SAFE, SANITIZED DATA
+    const validatedData = validation.data;
+
+    // 3. SAVE TO DATABASE
     const result = await db.insert(bookings).values({
-      full_name: body.full_name,
-      email: body.email,
-      phone: body.phone,
-      tour_package: body.tour_package,
-      currency: body.currency || "USD",
-      payment_method: body.payment_method || "Other",
-      travel_start_date: body.travel_start_date,
-      travel_end_date: body.travel_end_date,
-      adults: parseInt(body.adults) || 1,
-      children: parseInt(body.children) || 0,
+      full_name: validatedData.full_name,
+      email: validatedData.email,
+      phone: validatedData.phone,
+      tour_package: validatedData.tour_package,
+      currency: validatedData.currency || "USD",
+      payment_method: body.payment_method || "Bank Transfer",
+      travel_start_date: validatedData.travel_start_date,
+      travel_end_date: validatedData.travel_end_date,
+      adults: validatedData.adults,
+      children: validatedData.children,
+      notes: validatedData.notes,
       quoted_price: String(body.quoted_price || "0.00"),
-      notes: body.notes,
       managed_status: "Pending",
       payment_status: "Pending",
     });
+
     console.log("DB INSERT RESULT:", result);
 
     // Handle Drizzle ORM result structure to extract the insert ID
@@ -82,24 +102,27 @@ export async function POST(req) {
     // Common details section used in both emails
     const detailsHtml = `
       <div class="details-box">
-        <p style="margin:5px 0;"><strong>Tour:</strong> ${body.tour_package}</p>
-        <p style="margin:5px 0;"><strong>Dates:</strong> ${body.travel_start_date} → ${body.travel_end_date}</p>
-        <p style="margin:5px 0;"><strong>Travelers:</strong> ${body.adults} Adults, ${body.children} Children</p>
-        <p style="margin:5px 0;"><strong>Payment Method:</strong> ${body.payment_method}</p>
+        <p style="margin:5px 0;"><strong>Tour:</strong> ${validatedData.tour_package || "Custom Package"}</p>
+        <p style="margin:5px 0;"><strong>Dates:</strong> ${validatedData.travel_start_date || "TBD"} → ${validatedData.travel_end_date || "TBD"}</p>
+        <p style="margin:5px 0;"><strong>Travelers:</strong> ${validatedData.adults} Adults, ${validatedData.children} Children</p>
+        <p style="margin:5px 0;"><strong>Special Requests / Notes:</strong> ${validatedData.notes || "None"}</p>
       </div>`;
 
-    // 2. EMAIL CONTENT
+    // 4. EMAIL CONTENT
     const clientContent = `<p>Thank you for choosing Lynvista Safaris. We have received your booking request.</p>${detailsHtml}`;
     const adminContent = `<p><strong>🚨 New Booking Received (ID: ${newBookingId})</strong></p>
-                          <p><strong>Client:</strong> ${body.full_name} (${body.email})<br>
-                          <strong>Phone:</strong> ${body.phone}</p>${detailsHtml}`;
+                          <p><strong>Client:</strong> ${validatedData.full_name} (${validatedData.email})<br>
+                          <strong>Phone:</strong> ${validatedData.phone}</p>${detailsHtml}`;
 
-    // 3. SEND EMAILS
+    // 5. SEND EMAILS
     await transporter.sendMail({
       from: `"Lynvista Safaris" <${process.env.EMAIL_USER}>`,
-      to: body.email,
+      to: validatedData.email,
       subject: "Booking Confirmation - Lynvista Safaris",
-      html: getEmailTemplate(clientContent, "Hello " + body.full_name + ","),
+      html: getEmailTemplate(
+        clientContent,
+        "Hello " + validatedData.full_name + ",",
+      ),
     });
 
     await transporter.sendMail({
@@ -111,9 +134,17 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true, id: newBookingId });
   } catch (error) {
-    console.error("Submission Failed:", error);
+    // 6. THE SECURITY & OBSERVABILITY NET
+
+    // Capture the raw error for your dashboard
+    Sentry.captureException(error);
+
+    // Print to your local terminal
+    console.error("Booking Submission Failed:", error);
+
+    // Return the safe generic message (removed error.message)
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: "An unexpected processing error occurred." },
       { status: 500 },
     );
   }

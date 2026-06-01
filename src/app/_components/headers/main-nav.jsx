@@ -82,7 +82,8 @@ function MainNav() {
                 width={64}
                 height={64}
                 priority
-                className="object-contain" // Removed w-full h-full
+                className="object-contain"
+                style={{ width: "auto", height: "auto" }} // Next.js specifically looks for this prop!
               />
             </a>
           </div>

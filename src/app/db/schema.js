@@ -10,6 +10,12 @@ import {
   date,
   boolean, // Drizzle handles this as tinyint(1) for MySQL
 } from "drizzle-orm/mysql-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+/* ==========================================================================
+   DATABASE TABLES
+   ========================================================================== */
 
 /* =======================
    ADMINS
@@ -165,4 +171,59 @@ export const auditLogs = mysqlTable("audit_logs", {
   admin_id: int("admin_id").notNull(),
   action: varchar("action", { length: 255 }).notNull(),
   created_at: timestamp("created_at").defaultNow(),
+});
+
+/* ==========================================================================
+   SECURITY LAYER (AUTOMATED ZOD GENERATION)
+   ========================================================================== */
+
+/**
+ * 1. Secure Booking Input Schema
+ * Automatically maps to your exact DB field restrictions and drops unapproved inputs.
+ */
+export const insertBookingSchema = createInsertSchema(bookings, {
+  // Required fields
+  full_name: z.string().trim().min(2, "Name is required.").max(100),
+  email: z.string().trim().email("Invalid email.").max(100),
+  phone: z.string().trim().min(7, "Too short.").max(30),
+
+  // Optional fields - must be marked .optional().nullable()
+  tour_package: z.string().trim().max(255).optional().nullable(),
+  travel_start_date: z.string().optional().nullable(),
+  travel_end_date: z.string().optional().nullable(),
+  adults: z.coerce.number().int().min(1).default(1),
+  children: z.coerce.number().int().min(0).default(0),
+  currency: z.enum(["EUR", "USD", "KES"]).default("USD"),
+  payment_method: z.string().optional().nullable(),
+  notes: z.string().trim().max(2000).optional().nullable(),
+}).omit({
+  id: true,
+  created_at: true,
+  admin_notes: true,
+  quoted_price: true,
+  payment_link_sent: true,
+  managed_status: true,
+  payment_status: true,
+  payment_reference: true,
+  payment_proof_url: true,
+});
+
+export const insertInquirySchema = createInsertSchema(inquiries, {
+  full_name: z.string().trim().min(2, "Full name required.").max(100),
+  email: z.string().trim().email("Invalid email.").max(100),
+  subject: z.string().trim().min(3, "Subject too short.").max(150),
+  message: z.string().trim().min(10, "Message too short.").max(3000),
+})
+  .omit({
+    id: true,
+    status: true,
+    created_at: true,
+  })
+  .partial();
+/**
+ * 3. Static Admin Connection Schema
+ */
+export const adminLoginSchema = z.object({
+  email: z.string().trim().email("Valid email required.").max(150),
+  password: z.string().min(6, "Password is too short.").max(100),
 });

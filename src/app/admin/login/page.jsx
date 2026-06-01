@@ -2,11 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, AtSign, ArrowRight, HelpCircle, Loader2 } from "lucide-react";
+import {
+  Lock,
+  AtSign,
+  ArrowRight,
+  HelpCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // New state for the eye toggle
   const [loading, setLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -108,16 +117,24 @@ export default function AdminLogin() {
               <label className="block text-[10px] uppercase tracking-[0.15em] text-[#4A2E1B] font-bold mb-2">
                 Secure Password
               </label>
-              <div className="flex items-center border-b border-[#DCD5CB] pb-2 focus-within:border-[#8C4B25] transition-colors">
+              <div className="flex items-center border-b border-[#DCD5CB] pb-2 focus-within:border-[#8C4B25] transition-colors relative">
                 <Lock className="text-[#A8A096]" size={16} />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"} // Toggles between text and password
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full ml-3 bg-transparent text-sm tracking-widest text-[#4A2E1B] placeholder-[#C4BCB3] outline-none font-medium"
+                  className="w-full ml-3 pr-8 bg-transparent text-sm tracking-widest text-[#4A2E1B] placeholder-[#C4BCB3] outline-none font-medium"
                   required
                 />
+                {/* Eye Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-0 text-[#A8A096] hover:text-[#8C4B25] transition-colors focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
