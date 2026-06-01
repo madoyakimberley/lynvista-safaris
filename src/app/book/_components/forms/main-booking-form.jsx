@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight,
@@ -1008,7 +1008,6 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
               }}
             />
           </div>
-
           <label
             style={{
               display: "flex",
@@ -1018,15 +1017,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
               marginBottom: "24px",
             }}
           >
-            <input
-              type="checkbox"
-              required
-              style={{
-                marginTop: "4px",
-                accentColor: C.brown,
-              }}
-            />
-
+            <input type="checkbox" required className="custom-checkbox" />
             <span
               style={{
                 fontSize: "12px",
@@ -1035,11 +1026,27 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                 fontFamily: "'Playfair Display', serif",
               }}
             >
-              I agree to the Terms and Conditions and Privacy Policy of Lynvista
-              Safaris.
+              I agree to the{" "}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: C.brown, textDecoration: "underline" }}
+              >
+                terms
+              </a>{" "}
+              and{" "}
+              <a
+                href="/policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: C.brown, textDecoration: "underline" }}
+              >
+                policies
+              </a>{" "}
+              of Lynvistasafaris.
             </span>
           </label>
-
           <BackBtn onClick={onBack} label="Back to Travellers" />
         </div>
 
@@ -1461,6 +1468,11 @@ export default function MainBookingForm({ tours = [] }) {
 
   const [step, setStep] = useState(0);
 
+  // Scroll to top automatically whenever the step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
   const [success, setSuccess] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
@@ -1581,6 +1593,36 @@ export default function MainBookingForm({ tours = [] }) {
           .guest-grid{
             grid-template-columns:1fr !important;
           }
+        }
+
+        /* Checkbox Styling */
+        .custom-checkbox {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 18px;
+          height: 18px;
+          border: 1.5px solid ${C.brown};
+          border-radius: 4px;
+          background-color: transparent;
+          position: relative;
+          cursor: pointer;
+          margin-top: 2px;
+          flex-shrink: 0;
+          transition: background-color 0.2s;
+        }
+        .custom-checkbox:checked {
+          background-color: ${C.brown};
+        }
+        .custom-checkbox:checked::after {
+          content: '';
+          position: absolute;
+          left: 5px;
+          top: 2px;
+          width: 5px;
+          height: 9px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
         }
       `}</style>
 

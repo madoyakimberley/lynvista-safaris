@@ -152,9 +152,29 @@ function MainFooter() {
             alt="Lynvista initials"
             className="h-16 opacity-60 hover:opacity-100 transition-opacity duration-300"
           />
-          <p className="text-xs tracking-widest text-gray-500 uppercase">
-            © {currentYear} Lynvista Safaris Limited. All Rights Reserved.
-          </p>
+
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-xs tracking-widest text-gray-500 uppercase">
+              © {currentYear} Lynvista Safaris Limited. All Rights Reserved.
+            </p>
+
+            {/* Legal Links Row */}
+            <div className="flex items-center gap-4 text-[10px] tracking-widest text-gray-500 uppercase">
+              <a
+                href="/privacy"
+                className="hover:text-[#fbbf24] transition-colors duration-200"
+              >
+                Privacy Policy
+              </a>
+              <span className="text-[#5c3d2e] select-none">|</span>
+              <a
+                href="/terms"
+                className="hover:text-[#fbbf24] transition-colors duration-200"
+              >
+                Terms of Service
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
