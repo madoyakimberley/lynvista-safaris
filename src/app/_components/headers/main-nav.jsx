@@ -82,7 +82,7 @@ function MainNav() {
                 width={64}
                 height={64}
                 priority
-                className="h-full w-full object-contain"
+                className="object-contain" // Removed w-full h-full
               />
             </a>
           </div>
