@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -51,16 +51,16 @@ export default function AdminLogin() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative bg-[#2A1D16]"
-      style={{
-        // Using a placeholder savanna sunset background similar to the image
-        backgroundImage:
-          "linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&q=80&w=2668')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* The Image Component as a background */}
+      <Image
+        src="/images/Login.WebP"
+        alt="Savanna sunset background"
+        fill
+        priority
+        className="object-cover"
+        sizes="100vw"
+      />
       <div className="bg-[#FAF9F6] px-10 py-14 shadow-2xl w-full max-w-[420px] rounded-md relative flex flex-col items-center">
         {/* Header */}
         <div className="text-center mb-12">
