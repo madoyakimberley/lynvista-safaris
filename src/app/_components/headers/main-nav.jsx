@@ -103,6 +103,8 @@ function MainNav() {
             src="/images/NavBar.WebP"
             alt="Lynvista Safaris"
             fill
+            // Fix: 100vw on mobile, 50vw on medium screens (768px) and up
+            sizes="(max-width: 768px) 100vw, 50vw"
             priority
             className="object-cover"
           />

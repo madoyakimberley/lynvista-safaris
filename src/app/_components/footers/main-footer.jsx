@@ -55,10 +55,10 @@ function MainFooter() {
                   </span>
                 </div>
                 <a
-                  href="mailto:lynvistasafaris@outlook.com"
+                  href="mailto:info@lynvistasafaris.com"
                   className="hover:text-[#fbbf24] transition-colors"
                 >
-                  lynvistasafaris@outlook.com
+                  info@lynvistasafaris.com
                 </a>
               </div>
             </div>
@@ -124,7 +124,8 @@ function MainFooter() {
                 </p>
               </a>
 
-              {/* Linked Mini Map */}
+              {/* Linked Mini Map.  width="260"
+                  height="140" */}
               <a
                 href={googleMapsUrl}
                 target="_blank"
@@ -132,12 +133,13 @@ function MainFooter() {
                 className="block rounded-xl overflow-hidden border border-[#5c3d2e] shadow-2xl transition-transform hover:scale-105 duration-300"
               >
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.847134375!2d36.8015596!3d-1.260743!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f173f254ef62f%3A0xeb15618740b6eecf!2sWestlands%20commercial%20center!5e0!3m2!1sen!2ske!4v1700000000000!5m2!1sen!2ske"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.8524703577204!2d36.80115947502503!3d-1.2607374987272573!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f173f254ef62f%3A0xeb15618740b6ee3f!2sWestlands%20commercial%20center!5e0!3m2!1sen!2ske!4v1780316328738!5m2!1sen!2ske"
                   width="260"
                   height="140"
-                  className="border-0 grayscale hover:grayscale-0 transition-all duration-500 pointer-events-none"
+                  className="border-0"
+                  allowFullScreen
                   loading="lazy"
-                  title="Lynvista Safaris Location"
+                  referrerPolicy="no-referrer-when-downgrade"
                 />
               </a>
             </div>

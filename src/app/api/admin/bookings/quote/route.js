@@ -5,12 +5,12 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: process.env.EMAIL_SECURE === "true",
+  host: "smtp.resend.com", // Fixed: changed to the correct SMTP host
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: "resend", // Keep this exactly as 'resend'
+    pass: process.env.RESEND_API_KEY,
   },
 });
 

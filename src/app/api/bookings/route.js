@@ -4,10 +4,12 @@ import { bookings } from "@/app/db/schema";
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.resend.com", // Fixed: changed to the correct SMTP host
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // MUST be an App Password
+    user: "resend", // Keep this exactly as 'resend'
+    pass: process.env.RESEND_API_KEY,
   },
 });
 
@@ -66,6 +68,7 @@ export async function POST(req) {
       managed_status: "Pending",
       payment_status: "Pending",
     });
+    console.log("DB INSERT RESULT:", result);
 
     // Handle Drizzle ORM result structure to extract the insert ID
     const newBookingId = Array.isArray(result)

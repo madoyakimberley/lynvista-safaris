@@ -78,7 +78,7 @@ export default function PrivacyPolicy() {
               href="#contact"
               className="block hover:text-[#8C6D4F] transition-colors border-l-2 border-transparent pl-3 focus:border-[#8C6D4F] focus:text-[#8C6D4F]"
             >
-              Contact Our Privacy
+              Contact Our Support
             </a>
           </nav>
 
@@ -91,10 +91,10 @@ export default function PrivacyPolicy() {
               Our specialized team is available to discuss any privacy concerns.
             </p>
             <a
-              href="mailto:privacy@lynvistasafaris.com"
+              href="mailto:support@lynvistasafaris.com"
               className="text-sm font-medium text-[#8C6D4F] hover:underline block truncate"
             >
-              privacy@lynvistasafaris.com
+              support@lynvistasafaris.com
             </a>
           </div>
         </aside>
@@ -325,11 +325,11 @@ export default function PrivacyPolicy() {
               </p>
               <div className="pt-2">
                 <a
-                  href="mailto:privacy@lynvistasafaris.com"
+                  href="mailto:support@lynvistasafaris.com"
                   className="inline-flex items-center space-x-2 bg-[#52341A] text-white font-medium text-sm px-6 py-3 rounded-lg hover:bg-[#3D2511] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#52341A]"
                 >
                   <Mail className="w-4 h-4 stroke-[2]" />
-                  <span>Contact Privacy Team</span>
+                  <span>Contact Support Team</span>
                 </a>
               </div>
             </div>

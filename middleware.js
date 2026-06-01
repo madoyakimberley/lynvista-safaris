@@ -1,10 +1,63 @@
 import { NextResponse } from "next/server";
 
 export function middleware(req) {
-  const { pathname } = req.nextUrl;
+  const { pathname, searchParams } = req.nextUrl;
   const token = req.cookies.get("admin_token")?.value;
 
-  // 1. Define Public GET patterns (Data that can be viewed by anyone)
+  // ==========================================
+  // PROTECT RESHARED PAYMENT & CONFIRMATION LINKS
+  // ==========================================
+
+  // A. Protect M-Pesa Page (/pay/mpesa/...)
+  if (pathname.startsWith("/pay/mpesa")) {
+    // Safely extract ID from either path (/pay/mpesa/123) or query params (?id=123)
+    const pathSegments = pathname.split("/").filter(Boolean);
+    const pathId = pathSegments.length > 2 ? pathSegments[2] : null;
+    const bookingId = pathId || searchParams.get("id");
+
+    // If we can't find an ID in the URL, treat the cookie as missing
+    const hasMpesaCookie = bookingId
+      ? req.cookies.get(`mpesa_session_${bookingId}`)?.value
+      : null;
+
+    if (!hasMpesaCookie && !token) {
+      return NextResponse.redirect(new URL("/pay/expired", req.url));
+    }
+  }
+
+  // B. Protect Card Payment Page (/pay/card/...)
+  if (pathname.startsWith("/pay/card")) {
+    const pathSegments = pathname.split("/").filter(Boolean);
+    const pathId = pathSegments.length > 2 ? pathSegments[2] : null;
+    const bookingId = pathId || searchParams.get("id");
+
+    const hasCardCookie = bookingId
+      ? req.cookies.get(`card_session_${bookingId}`)?.value
+      : null;
+
+    if (!hasCardCookie && !token) {
+      return NextResponse.redirect(new URL("/pay/expired", req.url));
+    }
+  }
+
+  // C. Protect Booking Confirmation & Success Pages
+  if (
+    pathname.startsWith("/book/confirmation") ||
+    pathname.startsWith("/pay/payment-success")
+  ) {
+    const hasConfirmationCookie = req.cookies.get(
+      "valid_booking_session",
+    )?.value;
+
+    if (!hasConfirmationCookie && !token) {
+      return NextResponse.redirect(new URL("/book/expired", req.url));
+    }
+  }
+
+  // ==========================================
+  // EXISTING ROUTE RULES
+  // ==========================================
+
   const isPublicGet =
     (pathname.startsWith("/api/tours") ||
       pathname.startsWith("/api/services") ||
@@ -12,19 +65,15 @@ export function middleware(req) {
       pathname.startsWith("/api/verify-payment")) &&
     req.method === "GET";
 
-  // 2. Define Public Booking Lookup (Allow users to see their specific confirmation)
-  // Matches /api/bookings/[id] only for GET requests
   const isBookingLookup =
     /^\/api\/bookings\/[^/]+$/.test(pathname) && req.method === "GET";
 
-  // 3. Define Public POST/Form submissions (Bookings, Inquiries, Payments)
   const isPublicPost =
     pathname === "/api/bookings" ||
     pathname === "/api/inquiry" ||
     pathname.startsWith("/api/daraja") ||
     pathname.startsWith("/api/intasend");
 
-  // 4. Define Public Admin Auth
   const isPublicAuth =
     pathname === "/admin/login" || pathname.startsWith("/api/admin/auth");
 
@@ -37,14 +86,23 @@ export function middleware(req) {
   }
 
   // 6. Strict API Protection
-  // If it's an API route and NOT public, require an admin token
   if (pathname.startsWith("/api") && !isPublicRoute && !token) {
     return NextResponse.json({ error: "Unauthorized Access" }, { status: 401 });
   }
 
   return NextResponse.next();
 }
-//
+
+// ==========================================
+// CONFIG MATCHER ARRAY
+// ==========================================
 export const config = {
-  matcher: ["/admin/:path*", "/api/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/:path*",
+    "/pay/card/:path*",
+    "/pay/mpesa/:path*",
+    "/pay/payment-success/:path*",
+    "/book/confirmation/:path*",
+  ],
 };

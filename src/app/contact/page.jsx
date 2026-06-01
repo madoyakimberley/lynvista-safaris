@@ -124,7 +124,7 @@ function ContactPage() {
             </a>
 
             <a
-              href="mailto:lynvistasafaris@outlook.com"
+              href="mailto:info@lynvistasafaris.com"
               className="flex items-start gap-5 bg-[#fcfbfa] border border-[#3A2E26]/5 p-6 rounded-xl hover:shadow-md transition-shadow group"
             >
               <div className="p-3 bg-[#FAF9F4] rounded-lg text-[#4a3219] group-hover:bg-[#e9bc47]/10 transition-colors">
@@ -135,7 +135,7 @@ function ContactPage() {
                   Email Us
                 </h4>
                 <p className="text-sm font-bold text-[#3A2E26] break-all">
-                  lynvistasafaris@outlook.com
+                  info@lynvistasafaris.com
                 </p>
               </div>
             </a>

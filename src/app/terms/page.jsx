@@ -81,14 +81,14 @@ export default function TermsOfService() {
                 Need Clarity?
               </h3>
               <p className="text-xs text-[#6E6259] leading-relaxed mb-4">
-                Our legal team is available for any questions regarding our
+                Our support team is available for any questions regarding our
                 safari agreements.
               </p>
               <a
-                href="mailto:legal@lynvistasafaris.com"
+                href="mailto:support@lynvistasafaris.com"
                 className="text-xs font-bold text-[#8C6D4F] hover:text-[#52341A] transition-colors flex items-center group"
               >
-                Contact Legal Counsel
+                Contact Support Counsel
                 <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
