@@ -4,16 +4,6 @@ import { inquiries, insertInquirySchema } from "@/app/db/schema";
 import nodemailer from "nodemailer";
 import * as Sentry from "@sentry/nextjs";
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.resend.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: "resend",
-    pass: process.env.RESEND_API_KEY,
-  },
-});
-
 const getEmailTemplate = (content, headerTitle) => `
 <!DOCTYPE html>
 <html>
@@ -53,17 +43,11 @@ export async function POST(req) {
     // 1. RUN SECURITY VALIDATION
     const validation = insertInquirySchema.safeParse(body);
 
-    // If validation fails, log the exact field that failed to the terminal, then stop
     if (!validation.success) {
-      console.log("==========================================");
-      console.error("❌ VALIDATION FAILED ON ENDPOINT!");
-      console.error("INCOMING PAYLOAD:", body);
-      console.error(
-        "ZOD FIELD ERRORS:",
+      console.warn(
+        "Validation failed on inquiry endpoint:",
         validation.error.flatten().fieldErrors,
       );
-      console.log("==========================================");
-
       return NextResponse.json(
         {
           success: false,
@@ -74,10 +58,9 @@ export async function POST(req) {
       );
     }
 
-    // 2. EXTRACT SAFE, SANITIZED DATA
     const validatedData = validation.data;
 
-    // 3. SAVE TO DATABASE USING SANITIZED DATA
+    // 2. SAVE TO DATABASE
     const [result] = await db.insert(inquiries).values({
       full_name: validatedData.full_name,
       email: validatedData.email,
@@ -87,6 +70,36 @@ export async function POST(req) {
 
     const inquiryId = result.insertId;
 
+    // 3. CHECK EMAIL CONFIGURATION BEFORE PROCEEDING
+    if (
+      !process.env.RESEND_API_KEY ||
+      !process.env.EMAIL_USER ||
+      !process.env.ADMIN_EMAIL
+    ) {
+      console.error("🚨 Missing Email Environment Variables in Production!");
+      Sentry.captureMessage("Missing Email Environment Variables", "fatal");
+
+      // Return success because the DB insert worked, but note the email failure
+      return NextResponse.json({
+        success: true,
+        id: inquiryId,
+        warning:
+          "Inquiry saved, but notification emails are currently misconfigured.",
+      });
+    }
+
+    // 4. INITIALIZE TRANSPORTER (Inside function to guarantee env vars are loaded)
+    const transporter = nodemailer.createTransport({
+      host: "smtp.resend.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "resend",
+        pass: process.env.RESEND_API_KEY,
+      },
+    });
+
+    // 5. DRAFT EMAIL CONTENTS
     const detailsHtml = `
       <div class="details-box">
         <p style="margin: 4px 0;"><strong>Inquiry ID:</strong> #${inquiryId}</p>
@@ -94,7 +107,6 @@ export async function POST(req) {
         <p style="margin: 4px 0;"><strong>Message Summary:</strong> ${validatedData.message}</p>
       </div>`;
 
-    // 4. DRAFT EMAIL CONTENTS
     const clientHtml = `
       <p>Hello ${validatedData.full_name},</p>
       <p>Thank you for reaching out to Lynvista Safaris. We have successfully received your inquiry, and one of our dedicated African travel experts is already reviewing your request.</p>
@@ -109,28 +121,25 @@ export async function POST(req) {
       ${detailsHtml}
     `;
 
-    // 5. DISPATCH EMAILS WITH SECURE DATA
-    await transporter.sendMail({
-      from: `"Lynvista Safaris" <${process.env.EMAIL_USER}>`,
-      to: validatedData.email,
-      subject: "We Have Received Your Inquiry - Lynvista Safaris",
-      html: getEmailTemplate(clientHtml, "Your Odyssey Begins Here"),
-    });
-
-    await transporter.sendMail({
-      from: `"Lynvista System" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL,
-      subject: `🚨 New Inquiry Notification #${inquiryId}`,
-      html: getEmailTemplate(adminHtml, "New Dashboard Inquiry Raised"),
-    });
+    // 6. DISPATCH EMAILS
+    await Promise.all([
+      transporter.sendMail({
+        from: `"Lynvista Safaris" <${process.env.EMAIL_USER}>`,
+        to: validatedData.email,
+        subject: "We Have Received Your Inquiry - Lynvista Safaris",
+        html: getEmailTemplate(clientHtml, "Your Odyssey Begins Here"),
+      }),
+      transporter.sendMail({
+        from: `"Lynvista System" <${process.env.EMAIL_USER}>`,
+        to: process.env.ADMIN_EMAIL,
+        subject: `🚨 New Inquiry Notification #${inquiryId}`,
+        html: getEmailTemplate(adminHtml, "New Dashboard Inquiry Raised"),
+      }),
+    ]);
 
     return NextResponse.json({ success: true, id: inquiryId });
   } catch (error) {
-    // 6. THE SECURITY & OBSERVABILITY NET
-    // Track production runtime/database exceptions silently via Sentry
     Sentry.captureException(error);
-
-    // Keep this for clear debugging context in your terminal window
     console.error("Inquiry Processing Failed:", error);
 
     return NextResponse.json(
