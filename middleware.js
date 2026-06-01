@@ -6,11 +6,8 @@ import { Redis } from "@upstash/redis";
 // ==========================================
 // INITIALIZE UPSTASH RATE LIMITER
 // ==========================================
-// This connects automatically via your Vercel Environment Variables:
-// UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
-  // Configuration: Allow 10 requests every 10 seconds per IP address
   limiter: Ratelimit.slidingWindow(10, "10 s"),
   analytics: true,
   prefix: "@upstash/ratelimit",
@@ -19,10 +16,16 @@ const ratelimit = new Ratelimit({
 export async function middleware(req) {
   const { pathname, searchParams } = req.nextUrl;
 
+  // 1. Bot Detection: Prevents scrapers/social-previews from triggering redirects
+  const userAgent = req.headers.get("user-agent") || "";
+  const isBot =
+    /bot|googlebot|crawler|spider|facebookexternalhit|whatsapp|twitterbot/i.test(
+      userAgent,
+    );
+
   // ==========================================
   // EDGE RATE LIMITING LAYER
   // ==========================================
-  // Enforce rate limiting specifically on sensitive data-submission endpoints
   const isSensitiveApi =
     pathname === "/api/bookings" ||
     pathname === "/api/inquiry" ||
@@ -30,16 +33,12 @@ export async function middleware(req) {
     pathname.startsWith("/api/intasend");
 
   if (isSensitiveApi) {
-    // Identify user by their real IP address, falling back to local for dev environments
     const ip = req.ip ?? "127.0.0.1";
-
     try {
-      // Create a fast-failing fallback promise (600ms timeout)
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Upstash rate limit timeout")), 600),
       );
 
-      // Race the actual Redis look-up against our 600ms timeout window
       const { success, limit, remaining, reset } = await Promise.race([
         ratelimit.limit(ip),
         timeoutPromise,
@@ -60,7 +59,6 @@ export async function middleware(req) {
         );
       }
     } catch (error) {
-      // Fail-Open Strategy: If Redis times out or drops connection, log it and bypass
       console.warn(
         "Rate limiting temporarily bypassed due to latency/timeout:",
         error.message,
@@ -77,54 +75,48 @@ export async function middleware(req) {
   // PROTECT RESHARED PAYMENT & CONFIRMATION LINKS
   // ==========================================
 
-  // A. Protect M-Pesa Page (/pay/mpesa/...)
-  if (pathname.startsWith("/pay/mpesa")) {
-    const pathSegments = pathname.split("/").filter(Boolean);
-    const pathId = pathSegments.length > 2 ? pathSegments[2] : null;
-    const bookingId = pathId || searchParams.get("id");
+  // Logic to identify booking ID regardless of URL structure
+  const getBookingId = (prefix) => {
+    const segments = pathname
+      .split(prefix)
+      .filter(Boolean)[0]
+      ?.split("/")
+      .filter(Boolean);
+    return (segments && segments[0]) || searchParams.get("id");
+  };
 
-    const hasMpesaCookie = bookingId
-      ? req.cookies.get(`mpesa_session_${bookingId}`)?.value
-      : null;
-
-    if (!hasMpesaCookie && !token) {
-      return NextResponse.redirect(new URL("/pay/expired", req.url));
+  // ONLY enforce expiration if it's a real user (not a bot)
+  if (!isBot) {
+    // A. Protect M-Pesa Page
+    if (pathname.startsWith("/pay/mpesa")) {
+      const id = getBookingId("/pay/mpesa");
+      if (id && !req.cookies.get(`mpesa_session_${id}`)?.value && !token) {
+        return NextResponse.redirect(new URL("/pay/expired", req.url));
+      }
     }
-  }
 
-  // B. Protect Card Payment Page (/pay/card/...)
-  if (pathname.startsWith("/pay/card")) {
-    const pathSegments = pathname.split("/").filter(Boolean);
-    const pathId = pathSegments.length > 2 ? pathSegments[2] : null;
-    const bookingId = pathId || searchParams.get("id");
-
-    const hasCardCookie = bookingId
-      ? req.cookies.get(`card_session_${bookingId}`)?.value
-      : null;
-
-    if (!hasCardCookie && !token) {
-      return NextResponse.redirect(new URL("/pay/expired", req.url));
+    // B. Protect Card Payment Page
+    if (pathname.startsWith("/pay/card")) {
+      const id = getBookingId("/pay/card");
+      if (id && !req.cookies.get(`card_session_${id}`)?.value && !token) {
+        return NextResponse.redirect(new URL("/pay/expired", req.url));
+      }
     }
-  }
 
-  // C. Protect Booking Confirmation & Success Pages
-  if (
-    pathname.startsWith("/book/confirmation") ||
-    pathname.startsWith("/pay/payment-success")
-  ) {
-    const hasConfirmationCookie = req.cookies.get(
-      "valid_booking_session",
-    )?.value;
-
-    if (!hasConfirmationCookie && !token) {
-      return NextResponse.redirect(new URL("/book/expired", req.url));
+    // C. Protect Booking Confirmation
+    if (
+      pathname.startsWith("/book/confirmation") ||
+      pathname.startsWith("/pay/payment-success")
+    ) {
+      if (!req.cookies.get("valid_booking_session")?.value && !token) {
+        return NextResponse.redirect(new URL("/book/expired", req.url));
+      }
     }
   }
 
   // ==========================================
-  // EXISTINGS ROUTE RULES
+  // ROUTE RULES & SECURITY
   // ==========================================
-
   const isPublicGet =
     (pathname.startsWith("/api/tours") ||
       pathname.startsWith("/api/services") ||
@@ -143,7 +135,6 @@ export async function middleware(req) {
 
   const isPublicAuth =
     pathname === "/admin/login" || pathname.startsWith("/api/admin/auth");
-
   const isPublicRoute =
     isPublicGet || isBookingLookup || isPublicPost || isPublicAuth;
 
@@ -167,9 +158,7 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/api/:path*",
-    "/pay/card/:path*",
-    "/pay/mpesa/:path*",
-    "/pay/payment-success/:path*",
+    "/pay/:path*",
     "/book/confirmation/:path*",
   ],
 };
