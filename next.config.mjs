@@ -21,8 +21,9 @@ const nextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
+            // 🌟 Updated style-src and font-src to allow Google Fonts securely
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.sentry.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://024zpj5zfr.ufs.sh https://utfs.io; connect-src 'self' *.sentry.io; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self' https://www.google.com https://*.google.com; frame-ancestors 'none'; upgrade-insecure-requests;",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://024zpj5zfr.ufs.sh https://utfs.io; connect-src 'self' *.sentry.io; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self' https://www.google.com https://*.google.com; frame-ancestors 'none'; upgrade-insecure-requests;",
           },
           {
             key: "Strict-Transport-Security",
