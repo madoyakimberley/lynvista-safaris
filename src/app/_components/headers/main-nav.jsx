@@ -77,7 +77,7 @@ function MainNav() {
               className="h-12 w-12 md:h-16 md:w-16 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"
             >
               <Image
-                src="/images/logo.webp"
+                src="/images/logo.WebP"
                 alt="Lynvista Logo"
                 width={64}
                 height={64}
