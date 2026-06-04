@@ -69,6 +69,7 @@ export async function middleware(req) {
   // ==========================================
   // TOKEN & SESSIONS SETUP
   // ==========================================
+  // Unified admin token fetch (Used for page access rules)
   const token = req.cookies.get("admin_token")?.value;
 
   // ==========================================
@@ -87,28 +88,43 @@ export async function middleware(req) {
 
   // ONLY enforce expiration if it's a real user (not a bot)
   if (!isBot) {
-    // A. Protect M-Pesa Page
-    if (pathname.startsWith("/pay/mpesa")) {
-      const id = getBookingId("/pay/mpesa");
-      if (id && !req.cookies.get(`mpesa_session_${id}`)?.value && !token) {
-        return NextResponse.redirect(new URL("/pay/expired", req.url));
+    // ==========================================
+    // A & B. Protect M-Pesa & Card Payment Pages
+    // ==========================================
+    if (pathname.startsWith("/pay/mpesa") || pathname.startsWith("/pay/card")) {
+      const isMpesa = pathname.startsWith("/pay/mpesa");
+      const routeType = isMpesa ? "mpesa" : "card";
+      const pathPrefix = isMpesa ? "/pay/mpesa" : "/pay/card";
+
+      // FIX: Pass the specific prefix string down to parse the dynamic ID correctly
+      const id = getBookingId(pathPrefix);
+
+      if (id) {
+        const sessionCookie = req.cookies.get(
+          `${routeType}_session_${id}`,
+        )?.value;
+
+        // Only redirect if the user does not have an active session cookie AND isn't logged in as admin
+        if (!sessionCookie && !token) {
+          console.log(
+            `[Middleware] Blocked: No session or token for ${routeType} ID: ${id}`,
+          );
+          return NextResponse.redirect(new URL("/pay/expired", req.url));
+        }
       }
     }
 
-    // B. Protect Card Payment Page
-    if (pathname.startsWith("/pay/card")) {
-      const id = getBookingId("/pay/card");
-      if (id && !req.cookies.get(`card_session_${id}`)?.value && !token) {
-        return NextResponse.redirect(new URL("/pay/expired", req.url));
-      }
-    }
-
-    // C. Protect Booking Confirmation
+    // ==========================================
+    // C. Protect Booking Confirmation & Success
+    // ==========================================
     if (
       pathname.startsWith("/book/confirmation") ||
       pathname.startsWith("/pay/payment-success")
     ) {
-      if (!req.cookies.get("valid_booking_session")?.value && !token) {
+      const bookingSession = req.cookies.get("valid_booking_session")?.value;
+
+      if (!bookingSession && !token) {
+        console.log("[Middleware] Blocked: No valid booking session or token.");
         return NextResponse.redirect(new URL("/book/expired", req.url));
       }
     }
