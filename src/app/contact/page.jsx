@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useForm } from "react-hook-form";
 import {
   Phone,
   Mail,
@@ -12,19 +13,47 @@ import {
 import Image from "next/image";
 import Skeleton from "./Skeleton";
 
-function ContactPage() {
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    subject: "Safari Inquiry",
-    message: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
+const LOADING_MESSAGES = [
+  "Tracking the Great Migration...",
+  "Prepping your 4x4 safari cruiser...",
+  "Briefing your expert safari guides...",
+  "Polishing the high-end binoculars...",
+  "Mapping out your luxury savannah camps...",
+  "Checking the weather over the Serengeti...",
+  "Pouring the sundowner drinks...",
+];
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+function ContactPage() {
+  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: {
+      full_name: "",
+      email: "",
+      subject: "Safari Inquiry",
+      message: "",
+    },
+  });
+
+  useEffect(() => {
+    let interval; //  Fixed: Removed TypeScript annotation
+    if (isSubmitting) {
+      interval = setInterval(() => {
+        setCurrentMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+      }, 2500);
+    } else {
+      setCurrentMessageIndex(0);
+    }
+    return () => clearInterval(interval);
+  }, [isSubmitting]);
+
+  const onSubmit = async (formData) => {
     setStatusMessage({ type: "", text: "" });
 
     try {
@@ -40,12 +69,7 @@ function ContactPage() {
           type: "success",
           text: "Inquiry successfully sent! Check your email.",
         });
-        setFormData({
-          full_name: "",
-          email: "",
-          subject: "Safari Inquiry",
-          message: "",
-        });
+        reset();
       } else {
         setStatusMessage({
           type: "error",
@@ -57,14 +81,11 @@ function ContactPage() {
         type: "error",
         text: "Failed to communicate with server.",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="bg-[#FAF9F4] min-h-screen text-[#3A2E26] font-sans selection:bg-[#c19b6c] selection:text-white overflow-x-hidden">
-      {/* 1. HERO SECTION */}
       <div className="relative h-[500px] w-full flex flex-col items-center justify-center text-center px-6 overflow-hidden">
         <div className="absolute inset-0">
           <Image
@@ -87,7 +108,6 @@ function ContactPage() {
         </div>
       </div>
 
-      {/* 2. DIRECT ACCESS & INTERACTIVE FORM SPLIT */}
       <div
         className="max-w-7xl mx-auto px-6 py-24 grid grid-cols-1 lg:grid-cols-12 gap-16 items-start"
         suppressHydrationWarning
@@ -166,7 +186,7 @@ function ContactPage() {
             Send a Quick Message
           </h3>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[#a48665] mb-2">
@@ -174,15 +194,20 @@ function ContactPage() {
                 </label>
                 <input
                   type="text"
-                  required
                   data-lpignore="true"
                   placeholder="John Doe"
-                  value={formData.full_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, full_name: e.target.value })
-                  }
-                  className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors"
+                  {...register("full_name", {
+                    required: "Full name is required",
+                  })}
+                  className={`w-full bg-[#FAF9F4] border ${
+                    errors.full_name ? "border-rose-500" : "border-[#3A2E26]/10"
+                  } rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors`}
                 />
+                {errors.full_name && (
+                  <p className="text-rose-600 text-xs mt-1 font-medium">
+                    {errors.full_name.message}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -191,14 +216,23 @@ function ContactPage() {
                 </label>
                 <input
                   type="email"
-                  required
                   placeholder="john.doe@example.com"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors"
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Invalid email address",
+                    },
+                  })}
+                  className={`w-full bg-[#FAF9F4] border ${
+                    errors.email ? "border-rose-500" : "border-[#3A2E26]/10"
+                  } rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors`}
                 />
+                {errors.email && (
+                  <p className="text-rose-600 text-xs mt-1 font-medium">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -207,10 +241,7 @@ function ContactPage() {
                 Subject
               </label>
               <select
-                value={formData.subject}
-                onChange={(e) =>
-                  setFormData({ ...formData, subject: e.target.value })
-                }
+                {...register("subject")}
                 className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] focus:outline-none focus:border-[#4a3219] transition-colors appearance-none cursor-pointer"
               >
                 <option value="Safari Inquiry">Safari Inquiry</option>
@@ -230,26 +261,35 @@ function ContactPage() {
               </label>
               <textarea
                 rows={4}
-                required
                 placeholder="Tell us about your dream safari..."
-                value={formData.message}
-                onChange={(e) =>
-                  setFormData({ ...formData, message: e.target.value })
-                }
-                className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors resize-none"
+                {...register("message", { required: "Message is required" })}
+                className={`w-full bg-[#FAF9F4] border ${
+                  errors.message ? "border-rose-500" : "border-[#3A2E26]/10"
+                } rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors resize-none`}
               />
+              {errors.message && (
+                <p className="text-rose-600 text-xs mt-1 font-medium">
+                  {errors.message.message}
+                </p>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#5c4021] hover:bg-[#4a3219] disabled:bg-gray-400 text-white font-bold uppercase text-xs tracking-widest py-4 px-6 rounded-lg shadow-md transition-all flex items-center justify-center gap-3 group"
+              className="w-full bg-[#5c4021] hover:bg-[#4a3219] disabled:bg-gray-400 text-white font-bold uppercase text-xs tracking-widest py-4 px-6 rounded-lg shadow-md transition-all flex items-center justify-center gap-3 group h-12"
             >
-              <span>{isSubmitting ? "Sending..." : "Send Inquiry"}</span>
-              <ArrowRight
-                size={14}
-                className="group-hover:translate-x-1 transition-transform"
-              />
+              <span>
+                {isSubmitting
+                  ? LOADING_MESSAGES[currentMessageIndex]
+                  : "Send Inquiry"}
+              </span>
+              {!isSubmitting && (
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
+              )}
             </button>
 
             {statusMessage.text && (

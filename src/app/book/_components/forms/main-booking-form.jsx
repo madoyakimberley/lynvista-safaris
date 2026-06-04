@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import {
   ChevronRight,
   ChevronLeft,
@@ -19,7 +20,6 @@ import {
 } from "lucide-react";
 
 import useBook from "@/app/hooks/useBook";
-import useTours from "@/app/hooks/useTours";
 import CalendarPicker from "../ui/calendar-picker";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -378,7 +378,7 @@ function TripSummary({ form }) {
 // STEP 1
 // ─────────────────────────────────────────────────────────────────────────────
 
-function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
+function StepDestinations({ form, setValue, tours, toursLoading, onNext }) {
   const ACCOMMODATION = [
     "None",
     "Hotel",
@@ -453,13 +453,12 @@ function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
               <button
                 key={tour.id}
                 type="button"
-                onClick={() =>
-                  setForm((prev) => ({
-                    ...prev,
-                    tour_package: tour.title,
-                    quoted_price: Number(tour.base_price || 0),
-                  }))
-                }
+                onClick={() => {
+                  setValue("tour_package", tour.title, {
+                    shouldValidate: true,
+                  });
+                  setValue("quoted_price", Number(tour.base_price || 0));
+                }}
                 style={{
                   padding: 0,
                   overflow: "hidden",
@@ -566,10 +565,7 @@ function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
               key={type}
               type="button"
               onClick={() =>
-                setForm((prev) => ({
-                  ...prev,
-                  accommodation_type: type,
-                }))
+                setValue("accommodation_type", type, { shouldValidate: true })
               }
               style={{
                 padding: "10px 18px",
@@ -605,7 +601,7 @@ function StepDestinations({ form, setForm, tours, toursLoading, onNext }) {
 // STEP 2
 // ─────────────────────────────────────────────────────────────────────────────
 
-function StepDates({ form, setForm, onBack, onNext }) {
+function StepDates({ form, setValue, onBack, onNext }) {
   const today = new Date().toISOString().split("T")[0];
 
   return (
@@ -620,13 +616,10 @@ function StepDates({ form, setForm, onBack, onNext }) {
         startDate={form.travel_start_date}
         endDate={form.travel_end_date}
         minDate={today}
-        onChange={(start, end) =>
-          setForm((prev) => ({
-            ...prev,
-            travel_start_date: start,
-            travel_end_date: end,
-          }))
-        }
+        onChange={(start, end) => {
+          setValue("travel_start_date", start, { shouldValidate: true });
+          setValue("travel_end_date", end, { shouldValidate: true });
+        }}
       />
 
       <div
@@ -730,7 +723,7 @@ function Counter({ label, sub, value, min = 0, onChange }) {
   );
 }
 
-function StepTravellers({ form, setForm, onBack, onNext }) {
+function StepTravellers({ form, setValue, onBack, onNext }) {
   return (
     <div>
       <h1 style={PAGE_TITLE}>Who is Travelling?</h1>
@@ -755,10 +748,7 @@ function StepTravellers({ form, setForm, onBack, onNext }) {
           value={form.adults}
           min={1}
           onChange={(value) =>
-            setForm((prev) => ({
-              ...prev,
-              adults: value,
-            }))
+            setValue("adults", value, { shouldValidate: true })
           }
         />
 
@@ -768,10 +758,7 @@ function StepTravellers({ form, setForm, onBack, onNext }) {
           value={form.children}
           min={0}
           onChange={(value) =>
-            setForm((prev) => ({
-              ...prev,
-              children: value,
-            }))
+            setValue("children", value, { shouldValidate: true })
           }
         />
       </div>
@@ -796,7 +783,24 @@ function StepTravellers({ form, setForm, onBack, onNext }) {
 // STEP 4
 // ─────────────────────────────────────────────────────────────────────────────
 
-function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
+const LOADING_MESSAGES = [
+  "Submitting your request...",
+  "Preparing your itinerary...",
+  "Securing your dates...",
+  "Alerting our concierge...",
+  "Finalizing details...",
+];
+
+function StepFinalDetails({
+  form,
+  setValue,
+  register,
+  errors,
+  tours,
+  loading,
+  success,
+  onBack,
+}) {
   const selectedTour = tours?.find((tour) => tour.title === form.tour_package);
 
   const convertedPrice =
@@ -811,6 +815,20 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
       year: "numeric",
     });
   };
+
+  const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
+
+  useEffect(() => {
+    let interval;
+    if (loading) {
+      interval = setInterval(() => {
+        setLoadingMsgIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+      }, 2500);
+    } else {
+      setLoadingMsgIndex(0);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
 
   return (
     <div>
@@ -858,26 +876,24 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
             <Input
               icon={<User size={16} />}
               placeholder="Full Name"
-              value={form.full_name}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  full_name: e.target.value,
-                }))
-              }
+              registerProps={register("full_name", {
+                required: "Full Name is required",
+              })}
+              error={errors.full_name}
             />
 
             <Input
               icon={<Mail size={16} />}
               placeholder="Email Address"
               type="email"
-              value={form.email}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  email: e.target.value,
-                }))
-              }
+              registerProps={register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^\S+@\S+$/i,
+                  message: "Invalid email address",
+                },
+              })}
+              error={errors.email}
             />
           </div>
 
@@ -885,13 +901,10 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
             <Input
               icon={<Phone size={16} />}
               placeholder="+254 700 000 000"
-              value={form.phone}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  phone: e.target.value,
-                }))
-              }
+              registerProps={register("phone", {
+                required: "Phone number is required",
+              })}
+              error={errors.phone}
             />
           </div>
 
@@ -913,10 +926,9 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                     key={method}
                     type="button"
                     onClick={() =>
-                      setForm((prev) => ({
-                        ...prev,
-                        payment_method: method,
-                      }))
+                      setValue("payment_method", method, {
+                        shouldValidate: true,
+                      })
                     }
                     style={{
                       display: "flex",
@@ -961,10 +973,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                     key={currency}
                     type="button"
                     onClick={() =>
-                      setForm((prev) => ({
-                        ...prev,
-                        currency,
-                      }))
+                      setValue("currency", currency, { shouldValidate: true })
                     }
                     style={{
                       padding: "10px 16px",
@@ -991,13 +1000,7 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
             <div style={LABEL_SMALL}>Special Requests</div>
 
             <textarea
-              value={form.notes}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  notes: e.target.value,
-                }))
-              }
+              {...register("notes")}
               placeholder="Dietary requirements, accessibility needs, special occasions..."
               style={{
                 ...INPUT,
@@ -1008,45 +1011,64 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
               }}
             />
           </div>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "10px",
-              cursor: "pointer",
-              marginBottom: "24px",
-            }}
-          >
-            <input type="checkbox" required className="custom-checkbox" />
-            <span
+          <div style={{ marginBottom: "24px" }}>
+            <label
               style={{
-                fontSize: "12px",
-                color: C.muted,
-                lineHeight: "1.6",
-                fontFamily: "'Playfair Display', serif",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px",
+                cursor: "pointer",
               }}
             >
-              I agree to the{" "}
-              <a
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: C.brown, textDecoration: "underline" }}
+              <input
+                type="checkbox"
+                className="custom-checkbox"
+                {...register("terms_agreed", {
+                  required: "You must agree to the terms to proceed",
+                })}
+              />
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: C.muted,
+                  lineHeight: "1.6",
+                  fontFamily: "'Playfair Display', serif",
+                }}
               >
-                terms
-              </a>{" "}
-              and{" "}
-              <a
-                href="/policy"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: C.brown, textDecoration: "underline" }}
+                I agree to the{" "}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: C.brown, textDecoration: "underline" }}
+                >
+                  terms
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: C.brown, textDecoration: "underline" }}
+                >
+                  policies
+                </a>{" "}
+                of Lynvistasafaris.
+              </span>
+            </label>
+            {errors.terms_agreed && (
+              <div
+                style={{
+                  color: "#e53e3e",
+                  fontSize: "11px",
+                  marginTop: "6px",
+                  fontFamily: "'Playfair Display', serif",
+                }}
               >
-                policies
-              </a>{" "}
-              of Lynvistasafaris.
-            </span>
-          </label>
+                {errors.terms_agreed.message}
+              </div>
+            )}
+          </div>
           <BackBtn onClick={onBack} label="Back to Travellers" />
         </div>
 
@@ -1234,12 +1256,13 @@ function StepFinalDetails({ form, setForm, tours, loading, success, onBack }) {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "10px",
+                  transition: "all 0.3s ease",
                 }}
               >
                 {loading ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    Submitting...
+                    {LOADING_MESSAGES[loadingMsgIndex]}
                   </>
                 ) : (
                   <>
@@ -1296,11 +1319,12 @@ function SummaryLine({ title, value }) {
   );
 }
 
-function Input({ icon, type = "text", placeholder, value, onChange }) {
+function Input({ icon, type = "text", placeholder, registerProps, error }) {
   return (
     <div
       style={{
         position: "relative",
+        marginBottom: error ? "20px" : "0",
       }}
     >
       <div
@@ -1318,14 +1342,28 @@ function Input({ icon, type = "text", placeholder, value, onChange }) {
 
       <input
         type={type}
-        value={value}
-        onChange={onChange}
         placeholder={placeholder}
         style={{
           ...INPUT,
           paddingLeft: "44px",
+          borderColor: error ? "#e53e3e" : C.border,
         }}
+        {...registerProps}
       />
+      {error && (
+        <span
+          style={{
+            position: "absolute",
+            bottom: "-18px",
+            left: "4px",
+            color: "#e53e3e",
+            fontSize: "11px",
+            fontFamily: "'Playfair Display', serif",
+          }}
+        >
+          {error.message}
+        </span>
+      )}
     </div>
   );
 }
@@ -1463,19 +1501,65 @@ const COUNT_BTN = (disabled = false) => ({
 
 export default function MainBookingForm({ tours = [] }) {
   const router = useRouter();
-
   const { createBooking, loading } = useBook();
-
   const [step, setStep] = useState(0);
+  const [success, setSuccess] = useState(false);
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    trigger,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      full_name: "",
+      email: "",
+      phone: "",
+      tour_package: "",
+      flight_type: "None",
+      departure_city: "",
+      arrival_city: "",
+      accommodation_type: "None",
+      travel_start_date: today,
+      travel_end_date: "",
+      adults: 1,
+      children: 0,
+      currency: "USD",
+      notes: "",
+      payment_method: "Bank Transfer",
+      payment_status: "Pending",
+      managed_status: "Pending",
+      quoted_price: 0,
+      user_id: null,
+      terms_agreed: false,
+    },
+    mode: "onChange",
+  });
+
+  // Watch entire form state to propagate props seamlessly to subcomponents
+  const form = watch();
+
+  // Register implicitly handled fields to ensure they exist in RHF schema
+  useEffect(() => {
+    register("tour_package", { required: true });
+    register("accommodation_type");
+    register("travel_start_date", { required: true });
+    register("travel_end_date", { required: true });
+    register("adults", { min: 1 });
+    register("children", { min: 0 });
+    register("currency");
+    register("payment_method");
+    register("quoted_price");
+  }, [register]);
 
   // Scroll to top automatically whenever the step changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
-
-  const [success, setSuccess] = useState(false);
-
-  const today = new Date().toISOString().split("T")[0];
 
   const exchangeRates = {
     USD: 1,
@@ -1483,53 +1567,34 @@ export default function MainBookingForm({ tours = [] }) {
     EUR: 0.92,
   };
 
-  const [form, setForm] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
-    tour_package: "",
-    flight_type: "None",
-    departure_city: "",
-    arrival_city: "",
-    accommodation_type: "None",
-    travel_start_date: today,
-    travel_end_date: "",
-    adults: 1,
-    children: 0,
-    currency: "USD",
-    notes: "",
-    payment_method: "Bank Transfer",
-    payment_status: "Pending",
-    managed_status: "Pending",
-    quoted_price: 0,
-    user_id: null,
-  });
-
   const convertedPrice =
     Number(form.quoted_price || 0) * exchangeRates[form.currency];
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Helper validation forwarder to prevent skipping steps
+  const handleNextStep = async (fieldsToValidate, nextStepIndex) => {
+    const isValid = await trigger(fieldsToValidate);
+    if (isValid) setStep(nextStepIndex);
+  };
 
+  const onRHFSubmit = async (data) => {
     const toSQL = (date) => (date ? date.split("T")[0] : null);
 
     const finalConvertedPrice =
-      Number(form.quoted_price || 0) * exchangeRates[form.currency];
+      Number(data.quoted_price || 0) * exchangeRates[data.currency];
 
     const payload = {
-      ...form,
+      ...data,
       quoted_price: finalConvertedPrice,
-
-      travel_start_date: toSQL(form.travel_start_date),
-      travel_end_date: toSQL(form.travel_end_date),
-
-      adults: Number(form.adults),
-      children: Number(form.children),
-
-      notes: form.notes?.trim() || "",
-
-      user_id: form.user_id || null,
+      travel_start_date: toSQL(data.travel_start_date),
+      travel_end_date: toSQL(data.travel_end_date),
+      adults: Number(data.adults),
+      children: Number(data.children),
+      notes: data.notes?.trim() || "",
+      user_id: data.user_id || null,
     };
+
+    // Cleanup helper states not needed in backend
+    delete payload.terms_agreed;
 
     const res = await createBooking(payload);
     console.log("Full response from API:", res);
@@ -1537,7 +1602,7 @@ export default function MainBookingForm({ tours = [] }) {
     if (res) {
       setSuccess(true);
 
-      const newBookingId = res.id || res.insertId; // Adjust this if your API returns it differently!
+      const newBookingId = res.id || res.insertId;
 
       if (!newBookingId) {
         console.error("The booking was created, but no ID was returned!");
@@ -1545,7 +1610,6 @@ export default function MainBookingForm({ tours = [] }) {
       }
 
       setTimeout(() => {
-        // 3. Now the ID will be a real number instead of 'undefined'
         router.push(`/book/confirmation?bookingId=${newBookingId}`);
       }, 3000);
     }
@@ -1627,7 +1691,7 @@ export default function MainBookingForm({ tours = [] }) {
       `}</style>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onRHFSubmit)}
         className="booking-wrapper"
         style={{
           maxWidth: "1200px",
@@ -1655,28 +1719,30 @@ export default function MainBookingForm({ tours = [] }) {
             {step === 0 && (
               <StepDestinations
                 form={form}
-                setForm={setForm}
+                setValue={setValue}
                 tours={tours}
                 toursLoading={!tours.length}
-                onNext={() => setStep(1)}
+                onNext={() => handleNextStep(["tour_package"], 1)}
               />
             )}
 
             {step === 1 && (
               <StepDates
                 form={form}
-                setForm={setForm}
+                setValue={setValue}
                 onBack={() => setStep(0)}
-                onNext={() => setStep(2)}
+                onNext={() =>
+                  handleNextStep(["travel_start_date", "travel_end_date"], 2)
+                }
               />
             )}
 
             {step === 2 && (
               <StepTravellers
                 form={form}
-                setForm={setForm}
+                setValue={setValue}
                 onBack={() => setStep(1)}
-                onNext={() => setStep(3)}
+                onNext={() => handleNextStep(["adults", "children"], 3)}
               />
             )}
 
@@ -1684,7 +1750,9 @@ export default function MainBookingForm({ tours = [] }) {
               <div className="final-grid">
                 <StepFinalDetails
                   form={form}
-                  setForm={setForm}
+                  setValue={setValue}
+                  register={register}
+                  errors={errors}
                   tours={tours}
                   loading={loading}
                   success={success}
