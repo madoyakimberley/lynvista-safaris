@@ -1046,12 +1046,12 @@ function StepFinalDetails({
                 </a>{" "}
                 and{" "}
                 <a
-                  href="/policy"
+                  href="/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: C.brown, textDecoration: "underline" }}
                 >
-                  policies
+                  privacy policies
                 </a>{" "}
                 of Lynvistasafaris.
               </span>
