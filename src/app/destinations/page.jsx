@@ -42,14 +42,18 @@ export default function DestinationsPage() {
     <div className="bg-[#FAF9F4] min-h-screen text-[#3A2E26] font-sans selection:bg-[#c19b6c] selection:text-white overflow-x-hidden">
       {/* 1. HERO SECTION */}
       <div className="relative h-[550px] w-full flex items-center justify-start overflow-hidden">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 w-full h-full">
           <Image
             src="/images/tourdest.WebP"
             alt="Curated Destinations Hero"
-            fill
+            //fill
             priority
-            className="object-cover brightness-90"
-            sizes="100vw"
+            //setup size to avoid lagging
+            width={828}
+            height={552}
+            className="object-cover brightness-90 w-full h-full"
+            // Okay, let's try this: 100vw for mobile, 85vw for tablets/laptops, and 100vw for desktop monitors
+            //sizes="(max-width: 768px) 100vw, (max-width: 1200px) 85vw, 100vw"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
