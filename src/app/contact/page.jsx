@@ -18,12 +18,34 @@ function ContactPage() {
     email: "",
     subject: "Safari Inquiry",
     message: "",
+    website_url: "", // Hidden honeypot field for bots
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. Full Name Validation Guard
+    const nameParts = formData.full_name.trim().split(/\s+/);
+    if (nameParts.length < 2) {
+      setStatusMessage({
+        type: "error",
+        text: "Please enter both your first and last name.",
+      });
+      return;
+    }
+
+    // 2. Sentence Validation Guard
+    const sentenceRegex = /^[A-Z].{18,}[.!?]$/;
+    if (!sentenceRegex.test(formData.message.trim())) {
+      setStatusMessage({
+        type: "error",
+        text: "Please write a complete sentence ending with a period, exclamation point, or question mark.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setStatusMessage({ type: "", text: "" });
 
@@ -45,6 +67,7 @@ function ContactPage() {
           email: "",
           subject: "Safari Inquiry",
           message: "",
+          website_url: "",
         });
       } else {
         setStatusMessage({
@@ -167,7 +190,22 @@ function ContactPage() {
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* HIDDEN HONEYPOT FIELD FOR BOTS */}
+            <div className="hidden" aria-hidden="true">
+              <input
+                type="text"
+                name="website_url"
+                tabIndex={-1}
+                value={formData.website_url}
+                onChange={(e) =>
+                  setFormData({ ...formData, website_url: e.target.value })
+                }
+                autoComplete="off"
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* FULL NAME */}
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[#a48665] mb-2">
                   Full Name
@@ -181,10 +219,21 @@ function ContactPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, full_name: e.target.value })
                   }
-                  className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors"
+                  pattern="^[A-Za-z]+(?:\s+[A-Za-z]+)+$"
+                  onInvalid={(e) =>
+                    e.currentTarget.setCustomValidity(
+                      "Please enter your full name (first and last name).",
+                    )
+                  }
+                  onInput={(e) => e.currentTarget.setCustomValidity("")}
+                  className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors invalid:border-rose-300"
                 />
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Must include first and last name.
+                </p>
               </div>
 
+              {/* EMAIL ADDRESS */}
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[#a48665] mb-2">
                   Email Address
@@ -197,11 +246,18 @@ function ContactPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors"
+                  onInvalid={(e) =>
+                    e.currentTarget.setCustomValidity(
+                      "Please enter a valid email address.",
+                    )
+                  }
+                  onInput={(e) => e.currentTarget.setCustomValidity("")}
+                  className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors invalid:border-rose-300"
                 />
               </div>
             </div>
 
+            {/* SUBJECT */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-widest text-[#a48665] mb-2">
                 Subject
@@ -224,6 +280,7 @@ function ContactPage() {
               </select>
             </div>
 
+            {/* MESSAGE */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-widest text-[#a48665] mb-2">
                 Your Message
@@ -231,19 +288,39 @@ function ContactPage() {
               <textarea
                 rows={4}
                 required
-                placeholder="Tell us about your dream safari..."
+                minLength={20}
+                placeholder="I would like to plan a 7-day luxury safari to the Serengeti for next summer."
                 value={formData.message}
                 onChange={(e) =>
                   setFormData({ ...formData, message: e.target.value })
                 }
-                className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors resize-none"
+                pattern="^[A-Z].{18,}[.!?]$"
+                onInvalid={(e) => {
+                  const target = e.currentTarget;
+                  if (target.value.length < 20) {
+                    target.setCustomValidity(
+                      "Please write a longer message (at least 20 characters).",
+                    );
+                  } else {
+                    target.setCustomValidity(
+                      "Please enter a complete sentence starting with a capital letter and ending with punctuation (. ! or ?).",
+                    );
+                  }
+                }}
+                onInput={(e) => e.currentTarget.setCustomValidity("")}
+                className="w-full bg-[#FAF9F4] border border-[#3A2E26]/10 rounded-lg p-3.5 text-sm font-medium text-[#3A2E26] placeholder:text-gray-400 focus:outline-none focus:border-[#4a3219] transition-colors resize-none invalid:border-rose-300"
               />
+              <p className="text-[11px] text-gray-500 mt-1">
+                Please enter a full sentence ending with punctuation (e.g., . !
+                ?).
+              </p>
             </div>
 
+            {/* SUBMIT BUTTON */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#5c4021] hover:bg-[#4a3219] disabled:bg-gray-400 text-white font-bold uppercase text-xs tracking-widest py-4 px-6 rounded-lg shadow-md transition-all flex items-center justify-center gap-3 group"
+              className="w-full bg-[#5c4021] hover:bg-[#4a3219] disabled:bg-gray-400 text-white font-bold uppercase text-xs tracking-widest py-4 px-6 rounded-lg shadow-md transition-all flex items-center justify-center gap-3 group cursor-pointer disabled:cursor-not-allowed"
             >
               <span>{isSubmitting ? "Sending..." : "Send Inquiry"}</span>
               <ArrowRight
